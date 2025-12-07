@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>大学杯 UI Design System v5.0</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Space+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- CSS変数設定 --- */
+        :root {
+            /* 共通レイアウト設定 */
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --border-width: 1.5px;   /* 少し細くして上品に */
+            --shadow-dist: 3px;      /* 影も少し控えめに */
+            --sidebar-width: 260px;
+            
+            /* フォント */
+            --font-main: 'Zen Kaku Gothic New', sans-serif;
+            --font-serif: 'Shippori Mincho', serif;
+            --font-mono: 'Space Mono', monospace;
+
+            /* ライトモード（アカデミック・ノート） */
+            --c-bg: #f4f6f8;
+            --c-surface: #ffffff;
+            --c-surface-sub: #edf2f7;
+            --c-text: #2d3748;
+            --c-text-sub: #718096;
+            --c-border: #2d3748;     /* 濃いグレー */
+            --c-shadow: #cbd5e0;
+            
+            --c-primary: #2c5282;    /* 落ち着いたネイビー */
+            --c-primary-bg: #ebf8ff; /* 薄い青（背景用） */
+            --c-accent: #c53030;     /* 落ち着いた赤 */
+            --c-success: #2f855a;    /* 深い緑 */
+            --c-warning: #b7791f;    /* 落ち着いた金 */
+            
+            /* スプラトゥーン大会用 */
+            --c-alpha: #5a67d8;      /* 藍色 */
+            --c-bravo: #ed8936;      /* 柿色 */
+        }
+
+        /* ダークモード（夜の自習室・落ち着いた執筆モード） */
+        [data-theme="dark"] {
+            --c-bg: #1a202c;         /* 青みがかったダークグレー */
+            --c-surface: #2d3748;    /* 一段明るいグレー */
+            --c-surface-sub: #171923;/* 入力欄など */
+            --c-text: #e2e8f0;       /* オフホワイト */
+            --c-text-sub: #a0aec0;   /* 明るいグレー */
+            --c-border: #718096;     /* 中間グレー（サイバー感を消す） */
+            --c-shadow: #000000;     /* 黒い影 */
+            
+            --c-primary: #90cdf4;    /* 彩度を落とした水色 */
+            --c-primary-bg: #2a4365;
+            --c-accent: #fc8181;     /* パステルレッド */
+            --c-success: #68d391;    /* パステルグリーン */
+            --c-warning: #f6e05e;    /* パステルイエロー */
+            
+            --c-alpha: #7f9cf5;
+            --c-bravo: #fbd38d;
+        }
+
+        /* --- リセット & 基本スタイル --- */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        
+        body {
+            background-color: var(--c-bg);
+            color: var(--c-text);
+            font-family: var(--font-main);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* サイドバー */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--c-surface);
+            border-right: var(--border-width) solid var(--c-border);
+            height: 100vh;
+            position: fixed;
+            top: 0; left: 0;
+            overflow-y: auto;
+            padding: 20px;
+            z-index: 1000;
+        }
+        
+        /* メインコンテンツ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+            width: calc(100% - var(--sidebar-width)); /* 幅あふれ防止 */
+        }
+
+        /* ユーティリティクラス */
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+        .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        
+        .flex { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .flex-col { display: flex; flex-direction: column; gap: 10px; }
+        .flex-between { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+        .flex-center { display: flex; justify-content: center; align-items: center; }
+        
+        .w-full { width: 100%; }
+        .text-sm { font-size: 0.85rem; }
+        .text-mono { font-family: var(--font-mono); }
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-muted { color: var(--c-text-sub); }
+        .mt-4 { margin-top: 1.5rem; }
+        .mb-2 { margin-bottom: 0.5rem; }
+        .mb-4 { margin-bottom: 1.5rem; }
+
+        /* Typography */
+        h1, h2, h3, h4 { font-family: var(--font-serif); color: var(--c-text); line-height: 1.4; }
+        .section-title { 
+            margin: 60px 0 20px; padding-bottom: 10px; 
+            border-bottom: var(--border-width) solid var(--c-border);
+            color: var(--c-primary); font-size: 1.6rem;
+        }
+        .component-label {
+            margin: 30px 0 10px; font-size: 1rem; font-weight: bold; 
+            color: var(--c-text-sub); display: flex; align-items: center; gap: 8px;
+        }
+        .component-label::before { content:''; display:block; width:6px; height:6px; background:var(--c-border); border-radius:50%; }
+
+        /* --- 共通コンポーネント: UI Box --- */
+        .ui-box {
+            background: var(--c-surface);
+            border: var(--border-width) solid var(--c-border);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-dist) var(--shadow-dist) 0 var(--c-shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .ui-box:hover {
+            /* インタラクティブ要素でない場合はhover効果をCSSで上書き無効化する場合あり */
+        }
+
+        /* --- BASIC PARTS --- */
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 8px 16px; font-weight: bold; cursor: pointer; text-decoration: none;
+            border: var(--border-width) solid var(--c-border); border-radius: var(--radius-sm);
+            background: var(--c-surface); color: var(--c-text);
+            box-shadow: var(--shadow-dist) var(--shadow-dist) 0 var(--c-shadow);
+            font-size: 0.9rem; transition: 0.1s;
+        }
+        .btn:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--c-shadow); }
+        .btn-primary { background: var(--c-primary); color: #fff; border-color: var(--c-border); } /* Dark text for contrast if needed, currently white */
+        [data-theme="dark"] .btn-primary { color: #1a202c; } /* Dark mode primary text black */
+        .btn-danger { background: var(--c-accent); color: white; }
+        .btn-ghost { background: transparent; border-color: transparent; box-shadow: none; }
+        .btn-ghost:hover { background: var(--c-surface-sub); }
+        .btn-block { width: 100%; }
+
+        /* Inputs */
+        .input, .select, .textarea {
+            width: 100%; padding: 10px; border: var(--border-width) solid var(--c-border);
+            border-radius: var(--radius-sm); background: var(--c-surface); color: var(--c-text);
+            font-size: 0.95rem; outline: none; font-family: inherit;
+        }
+        .input:focus, .select:focus, .textarea:focus { border-color: var(--c-primary); box-shadow: 0 0 0 2px var(--c-shadow); }
+        
+        /* Tags & Badges */
+        .tag {
+            display: inline-flex; padding: 2px 8px; font-size: 0.75rem; border: 1px solid var(--c-border);
+            border-radius: 4px; font-weight: bold; background: var(--c-surface-sub); white-space: nowrap;
+        }
+        .badge {
+            display: inline-flex; justify-content: center; align-items: center;
+            min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+            background: var(--c-accent); color: white; font-size: 0.7rem; font-weight: bold;
+        }
+
+        /* Tabs */
+        .tab-group { display: flex; border-bottom: var(--border-width) solid var(--c-border); }
+        .tab-item {
+            padding: 10px 20px; cursor: pointer; font-weight: bold; color: var(--c-text-sub);
+            border-bottom: 3px solid transparent; transition: 0.2s;
+        }
+        .tab-item:hover { color: var(--c-text); background: var(--c-surface-sub); }
+        .tab-item.active { color: var(--c-primary); border-bottom-color: var(--c-primary); }
+
+        /* Icon SVG Style */
+        .icon { width: 1.1em; height: 1.1em; vertical-align: text-bottom; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+        /* --- ADVANCED PARTS --- */
+
+        /* A. Tournament Bracket Node */
+        .bracket-wrapper { overflow-x: auto; padding: 10px; display: flex; gap: 30px; }
+        .bracket-col { display: flex; flex-direction: column; justify-content: space-around; gap: 20px; }
+        .bracket-card { 
+            width: 180px; padding: 10px; border: 1px solid var(--c-border); 
+            background: var(--c-surface); border-radius: 4px; position: relative;
+        }
+        .bracket-card::after { /* Connector line stub */
+            content: ''; position: absolute; right: -30px; top: 50%; width: 30px; height: 1px; background: var(--c-border); display: none;
+        }
+        .has-next::after { display: block; }
+        .team-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; }
+        .team-row.winner { font-weight: bold; color: var(--c-success); }
+        
+        /* B. Stage Ban/Pick Map */
+        .stage-card {
+            position: relative; border: var(--border-width) solid var(--c-border); border-radius: var(--radius-sm);
+            overflow: hidden; aspect-ratio: 16/9; cursor: pointer; transition: 0.2s;
+        }
+        .stage-card img { width: 100%; height: 100%; object-fit: cover; opacity: 0.8; }
+        .stage-card:hover img { opacity: 1; transform: scale(1.05); transition: 0.3s; }
+        .stage-label {
+            position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.7);
+            color: white; font-size: 0.8rem; padding: 4px 8px; font-weight: bold;
+        }
+        .stage-status {
+            position: absolute; top: 5px; right: 5px; padding: 2px 6px; font-size: 0.7rem;
+            border-radius: 4px; font-weight: bold; color: white;
+        }
+        .status-ban { background: var(--c-accent); }
+        .status-pick { background: var(--c-success); }
+
+        /* C. Chat / Timeline */
+        .timeline-item { display: flex; gap: 10px; padding-bottom: 20px; border-left: 2px solid var(--c-border); padding-left: 20px; margin-left: 10px; position: relative; }
+        .timeline-item::before {
+            content: ''; position: absolute; left: -7px; top: 0; width: 12px; height: 12px;
+            background: var(--c-surface); border: 2px solid var(--c-border); border-radius: 50%;
+        }
+        .timeline-date { font-size: 0.75rem; color: var(--c-text-sub); font-family: var(--font-mono); }
+        
+        /* D. Stats Graph (CSS Bar) */
+        .bar-chart { display: flex; align-items: flex-end; height: 100px; gap: 5px; padding-bottom: 5px; border-bottom: 1px solid var(--c-border); }
+        .bar { width: 100%; background: var(--c-primary); opacity: 0.7; border-radius: 2px 2px 0 0; transition: height 0.5s; position: relative; }
+        .bar:hover { opacity: 1; }
+        .bar-val { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; }
+
+        /* E. Accordion */
+        .accordion { border: var(--border-width) solid var(--c-border); border-radius: var(--radius-sm); overflow: hidden; margin-bottom: 10px; }
+        .accordion-header {
+            padding: 15px; background: var(--c-surface); cursor: pointer; font-weight: bold;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .accordion-body { padding: 15px; background: var(--c-surface-sub); border-top: 1px solid var(--c-border); display: none; }
+        .accordion.open .accordion-body { display: block; }
+
+        /* Nav Links */
+        .nav-category { font-size: 0.8rem; font-weight: bold; color: var(--c-text-sub); margin-top: 20px; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .nav-link { display: block; padding: 8px 10px; color: var(--c-text); text-decoration: none; border-radius: 4px; font-size: 0.9rem; margin-bottom: 2px; }
+        .nav-link:hover { background: var(--c-surface-sub); color: var(--c-primary); }
+
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div style="padding: 15px; border: var(--border-width) solid var(--c-border); border-radius: var(--radius-md); text-align: center; margin-bottom: 20px; background: var(--c-surface);">
+            <div style="font-family: var(--font-serif); font-weight: bold; font-size: 1.2rem; color: var(--c-primary);">大学杯</div>
+            <div style="font-size: 0.7rem; color: var(--c-text-sub);">UI SYSTEM v5.0</div>
+        </div>
+
+        <div class="nav-category">基本 / Basic</div>
+        <a href="#basic-elements" class="nav-link">Button・Input・Badge</a>
+        <a href="#basic-nav" class="nav-link">Navigation・Tabs</a>
+        <a href="#basic-feedback" class="nav-link">Alert・Modal</a>
+
+        <div class="nav-category">大会運営 / Operations</div>
+        <a href="#adv-match-control" class="nav-link">対戦管理・結果報告</a>
+        <a href="#adv-bracket" class="nav-link">トーナメント表</a>
+        <a href="#adv-stage" class="nav-link">ステージ選択 (Ban/Pick)</a>
+
+        <div class="nav-category">チーム・選手 / User</div>
+        <a href="#adv-dashboard" class="nav-link">ダッシュボード・スタッツ</a>
+        <a href="#adv-profile" class="nav-link">プロフィール編集</a>
+        
+        <div class="nav-category">情報・広報 / Public</div>
+        <a href="#adv-info" class="nav-link">お知らせ・FAQ・日程</a>
+        <a href="#adv-broadcast" class="nav-link">配信オーバーレイ</a>
+
+        <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid var(--c-border);">
+            <label class="flex" style="cursor: pointer; font-size: 0.9rem;">
+                <input type="checkbox" id="themeToggle" style="width: 16px; height: 16px;">
+                <span>ダークモード (Dark)</span>
+            </label>
+        </div>
+    </nav>
+
+    <main class="main-content">
+
+        <h1 class="section-title">01. 基本パーツ (Basic)</h1>
+
+        <section id="basic-elements">
+            <div class="component-label">Button & Actions</div>
+            <div class="flex">
+                <button class="btn btn-primary">登録 (Primary)</button>
+                <button class="btn">詳細 (Default)</button>
+                <button class="btn btn-ghost">キャンセル</button>
+                <button class="btn btn-danger">削除</button>
+                <button class="btn" disabled style="opacity: 0.6;">無効</button>
+                <button class="btn" style="border-radius: 50px;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    CSV出力
+                </button>
+            </div>
+
+            <div class="grid-2 mt-4">
+                <div>
+                    <div class="component-label">Input & Form</div>
+                    <div class="flex-col">
+                        <input type="text" class="input" placeholder="チーム名を入力...">
+                        <div class="flex">
+                            <input type="date" class="input">
+                            <input type="time" class="input">
+                        </div>
+                        <select class="select">
+                            <option>部門を選択</option>
+                            <option>ガチエリア</option>
+                            <option>ナワバリバトル</option>
+                        </select>
+                        <textarea class="textarea" rows="2" placeholder="備考・コメント"></textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="component-label">Tags & Status</div>
+                    <div class="flex ui-box" style="padding: 20px;">
+                        <span class="tag">XP 2800</span>
+                        <span class="tag">リーダー</span>
+                        <span class="tag" style="background: var(--c-primary); color: white;">承認済</span>
+                        <div style="position: relative;">
+                            <span class="badge" style="position: absolute; top: -10px; right: -10px;">3</span>
+                            <button class="btn btn-ghost" style="border: 1px solid var(--c-border);">通知</button>
+                        </div>
+                        <div class="flex ml-4">
+                            <div style="width:10px; height:10px; background:var(--c-success); border-radius:50%;"></div>
+                            <span class="text-sm">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="basic-nav">
+            <div class="component-label">Navigation & Tabs</div>
+            <div class="ui-box" style="padding: 0; overflow: hidden;">
+                <div class="tab-group">
+                    <div class="tab-item active">大会概要</div>
+                    <div class="tab-item">ルール</div>
+                    <div class="tab-item">エントリー</div>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="text-sm text-muted mb-2">Home > Season 5 > 概要</div>
+                    <h3 style="margin-bottom: 10px;">第5回 大学杯 開催決定</h3>
+                    <p>パンくずリストやタブ切り替えを使用して、情報の階層を整理します。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="basic-feedback">
+            <div class="component-label">Feedback (Alerts)</div>
+            <div class="flex-col">
+                <div class="ui-box" style="padding: 15px; border-left: 5px solid var(--c-primary); display: flex; gap: 10px;">
+                    <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span><strong>Info:</strong> エントリー締切まであと3日です。</span>
+                </div>
+                <div class="ui-box" style="padding: 15px; border-left: 5px solid var(--c-warning); background: var(--c-surface-sub); display: flex; gap: 10px;">
+                    <svg class="icon" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    <span><strong>Check:</strong> メンバーのXパワー更新が必要です。</span>
+                </div>
+            </div>
+        </section>
+
+
+        <h1 class="section-title">02. 発展パーツ (Advanced)</h1>
+
+        <section id="adv-match-control">
+            <h3>大会運営 / Operations</h3>
+            <p class="text-muted text-sm mb-4">試合の進行管理、結果承認、不戦勝処理など</p>
+            
+            <div class="grid-2">
+                <div class="ui-box" style="padding: 20px;">
+                    <div class="flex-between mb-4">
+                        <span class="tag">MATCH #102</span>
+                        <span class="text-sm text-mono">21:00 START</span>
+                    </div>
+                    <div class="flex-between mb-4" style="padding: 10px; background: var(--c-surface-sub); border-radius: 4px;">
+                        <div class="text-center">
+                            <div style="font-weight: bold;">イカ墨大学</div>
+                            <div class="tag mt-4" style="background: var(--c-success); color: white;">準備完了</div>
+                        </div>
+                        <div class="text-mono font-bold text-muted">VS</div>
+                        <div class="text-center">
+                            <div style="font-weight: bold;">タコ足サークル</div>
+                            <div class="tag mt-4">未チェックイン</div>
+                        </div>
+                    </div>
+                    <div class="flex-col">
+                        <button class="btn btn-primary btn-block">対戦開始を宣言</button>
+                        <div class="flex">
+                            <button class="btn w-full">不戦勝処理</button>
+                            <button class="btn w-full btn-danger">失格にする</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-box" style="padding: 20px;">
+                    <h4 class="mb-2">結果報告の承認</h4>
+                    <p class="text-sm text-muted mb-4">勝利チームからの報告： 2 - 1</p>
+                    <div style="background: var(--c-surface-sub); padding: 10px; border: 1px solid var(--c-border); margin-bottom: 15px;">
+                        <div class="text-sm">添付画像:</div>
+                        <div style="height: 60px; background: #ddd; display: flex; align-items: center; justify-content: center; color: #666; font-size: 0.8rem;">Result_Screenshot.jpg</div>
+                    </div>
+                    <div class="flex">
+                        <button class="btn btn-primary w-full">承認する</button>
+                        <button class="btn w-full">差し戻し</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adv-bracket" class="mt-4">
+            <div class="component-label">Tournament Bracket (CSS only)</div>
+            <div class="ui-box bracket-wrapper">
+                <div class="bracket-col">
+                    <div class="bracket-card has-next">
+                        <div class="text-sm text-muted mb-2">Round 1</div>
+                        <div class="team-row winner">Team A <span>2</span></div>
+                        <div class="team-row">Team B <span>0</span></div>
+                    </div>
+                    <div class="bracket-card has-next">
+                        <div class="text-sm text-muted mb-2">Round 1</div>
+                        <div class="team-row">Team C <span>1</span></div>
+                        <div class="team-row winner">Team D <span>2</span></div>
+                    </div>
+                </div>
+                <div class="bracket-col">
+                    <div class="bracket-card">
+                        <div class="text-sm text-muted mb-2">Semi Final</div>
+                        <div class="team-row">Team A <span>-</span></div>
+                        <div class="team-row">Team D <span>-</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adv-stage" class="mt-4">
+            <div class="component-label">Stage Ban / Pick</div>
+            <div class="grid-3">
+                <div class="stage-card" style="border-color: var(--c-success); box-shadow: 0 0 0 2px var(--c-success);">
+                    <div style="height:100%; background:#ccc; display:flex; align-items:center; justify-content:center;">STAGE IMG</div>
+                    <span class="stage-status status-pick">PICK</span>
+                    <div class="stage-label">ザトウマーケット</div>
+                </div>
+                <div class="stage-card" style="opacity: 0.5; filter: grayscale(1);">
+                    <div style="height:100%; background:#ccc; display:flex; align-items:center; justify-content:center;">STAGE IMG</div>
+                    <span class="stage-status status-ban">BAN</span>
+                    <div class="stage-label">スメーシーワールド</div>
+                </div>
+                <div class="stage-card">
+                    <div style="height:100%; background:#ccc; display:flex; align-items:center; justify-content:center;">STAGE IMG</div>
+                    <div class="stage-label">マテガイ放水路</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adv-dashboard" class="mt-4">
+            <h3>チーム・選手 / Dashboard</h3>
+            <p class="text-muted text-sm mb-4">マイページ、戦績確認、通知</p>
+
+            <div class="grid-2">
+                <div class="ui-box" style="padding: 20px;">
+                    <h4 class="mb-4">ブキ使用率</h4>
+                    <div class="bar-chart">
+                        <div class="bar" style="height: 80%;"><span class="bar-val">80%</span></div>
+                        <div class="bar" style="height: 45%; background: var(--c-text-sub);"><span class="bar-val">45%</span></div>
+                        <div class="bar" style="height: 20%; background: var(--c-text-sub);"><span class="bar-val">20%</span></div>
+                        <div class="bar" style="height: 10%; background: var(--c-text-sub);"><span class="bar-val">10%</span></div>
+                    </div>
+                    <div class="flex mt-2 text-sm text-muted" style="justify-content: space-around;">
+                        <span>シューター</span><span>ローラー</span><span>チャージャー</span><span>他</span>
+                    </div>
+                </div>
+
+                <div class="ui-box" style="padding: 20px;">
+                    <h4 class="mb-4">アクティビティ</h4>
+                    <div>
+                        <div class="timeline-item flex-col">
+                            <span class="timeline-date">2025.12.07 20:00</span>
+                            <span class="text-sm">対戦相手「タコ足サークル」が決定しました。</span>
+                        </div>
+                        <div class="timeline-item flex-col">
+                            <span class="timeline-date">2025.12.06 18:30</span>
+                            <span class="text-sm">エントリーが承認されました。</span>
+                        </div>
+                        <div class="timeline-item flex-col" style="border-left-color: transparent;">
+                            <span class="timeline-date">2025.12.01 10:00</span>
+                            <span class="text-sm">アカウントを作成しました。</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adv-profile" class="mt-4">
+            <div class="component-label">Invite & Profile Card</div>
+            <div class="ui-box" style="padding: 0; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="height: 80px; background: var(--c-primary); position: relative;">
+                    <div style="position: absolute; bottom: -30px; left: 20px; width: 80px; height: 80px; background: #fff; border-radius: 50%; border: 4px solid var(--c-surface); display: flex; align-items: center; justify-content: center; font-size: 2rem;">🦑</div>
+                </div>
+                <div style="padding: 40px 20px 20px;">
+                    <div class="flex-between">
+                        <div>
+                            <h3>IKA_TARO <span class="text-sm text-muted">@ika_univ_01</span></h3>
+                            <p class="text-sm mt-4">明治大学スプラトゥーンサークル代表。スシコラ使いです。</p>
+                        </div>
+                        <button class="btn">編集</button>
+                    </div>
+                    <div class="mt-4 p-4 ui-box" style="background: var(--c-surface-sub); box-shadow: none;">
+                        <label class="text-sm font-bold mb-2 block">招待リンクをコピー</label>
+                        <div class="flex">
+                            <input type="text" class="input" value="https://daigakuhai.jp/invite/x8d9s" readonly>
+                            <button class="btn btn-primary">コピー</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adv-info" class="mt-4">
+            <h3>情報・広報 / Public Info</h3>
+            <p class="text-muted text-sm mb-4">FAQ、スケジュール、スポンサー表示など</p>
+
+            <div class="grid-2">
+                <div>
+                    <div class="accordion open">
+                        <div class="accordion-header">
+                            Q. メンバー変更は可能ですか？ <span>▼</span>
+                        </div>
+                        <div class="accordion-body">
+                            A. 大会前日の23:59までマイページから変更可能です。
+                        </div>
+                    </div>
+                    <div class="accordion">
+                        <div class="accordion-header">
+                            Q. 配信はありますか？ <span>▶</span>
+                        </div>
+                        <div class="accordion-body">
+                            A. 準決勝以降、公式YouTubeチャンネルで配信予定です。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ui-box" style="padding: 0;">
+                    <div style="padding: 10px 15px; border-bottom: 1px solid var(--c-border); background: var(--c-surface-sub); font-weight: bold;">
+                        大会スケジュール
+                    </div>
+                    <div>
+                        <div class="flex-between" style="padding: 10px 15px; border-bottom: 1px solid var(--c-border);">
+                            <span>エントリー締切</span>
+                            <span class="text-mono">12/10 23:59</span>
+                        </div>
+                        <div class="flex-between" style="padding: 10px 15px; border-bottom: 1px solid var(--c-border);">
+                            <span>予選リーグ</span>
+                            <span class="text-mono">12/15 13:00~</span>
+                        </div>
+                        <div class="flex-between" style="padding: 10px 15px;">
+                            <span>決勝トーナメント</span>
+                            <span class="text-mono">12/16 18:00~</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="adv-broadcast" class="mt-4 mb-4">
+            <div class="component-label">Broadcast Overlay (OBS用)</div>
+            <div class="ui-box" style="padding: 0; overflow: hidden; display: flex; align-items: center; border-width: 3px;">
+                <div style="background: var(--c-primary); color: white; padding: 10px 20px; font-weight: bold; font-family: var(--font-mono);">
+                    NEXT MATCH
+                </div>
+                <div style="flex: 1; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; background: var(--c-surface);">
+                    <div class="flex">
+                        <span class="tag" style="background: var(--c-alpha); color: white; border: none;">ALPHA</span>
+                        <span style="font-weight: bold; font-size: 1.2rem;">イカ墨大学</span>
+                    </div>
+                    <div style="font-family: var(--font-mono); font-weight: bold; font-size: 1.5rem; color: var(--c-text-sub);">VS</div>
+                    <div class="flex">
+                        <span style="font-weight: bold; font-size: 1.2rem;">タコ足サークル</span>
+                        <span class="tag" style="background: var(--c-bravo); color: white; border: none;">BRAVO</span>
+                    </div>
+                </div>
+                <div style="padding: 10px 20px; background: var(--c-surface-sub); font-size: 0.9rem; border-left: 2px solid var(--c-border);">
+                    Best 8 / ガチヤグラ
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ダークモード切り替え
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+
+        // 初期設定：OSの設定を見る
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            themeToggle.checked = true;
+            html.setAttribute('data-theme', 'dark');
+        }
+
+        themeToggle.addEventListener('change', () => {
+            html.setAttribute('data-theme', themeToggle.checked ? 'dark' : 'light');
+        });
+
+        // アコーディオンの動作デモ
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                header.parentElement.classList.toggle('open');
+            });
+        });
+    </script>
+</body>
+</html>
