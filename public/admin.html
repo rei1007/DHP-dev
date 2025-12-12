@@ -1028,20 +1028,17 @@
             const t = tournaments.find(x => x.id === tid);
             if (!t) return;
 
-            let title = '';
-            let body = '';
+            // Simplified Template: "大会告知のみ"
+            const title = `【大会告知】${t.name}の開催について`;
 
-            // Simple Logic for draft
-            if (t.status === 'open') {
-                title = `【エントリー開始】${t.name}`;
-                body = `**${t.name}** のエントリー受付を開始しました！\n\n- 開催日: ${t.eventDate || '未定'}\n- エントリー期間: ～${t.entryEnd ? new Date(t.entryEnd).toLocaleDateString() : '未定'}\n\n皆様の参加をお待ちしています。`;
-            } else if (t.winner) {
-                title = `【結果発表】${t.name}`;
-                body = `**${t.name}** が終了しました。\n\n**優勝: ${t.winner.team || '不明'}**\nおめでとうございます！\n\n詳細は大会結果ページをご覧ください。`;
-            } else {
-                title = `【お知らせ】${t.name}`;
-                body = `**${t.name}** についてのお知らせです。\n\n詳細は続報をお待ちください。`;
+            // Format Dates
+            const eventDate = t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '未定';
+            let entryPeriod = '未定';
+            if (t.entryStart && t.entryEnd) {
+                entryPeriod = `${new Date(t.entryStart).toLocaleDateString()} ～ ${new Date(t.entryEnd).toLocaleDateString()}`;
             }
+
+            const body = `**${t.name}** の開催が決定いたしました！\n\n皆様の多くのご参加をお待ちしております。\n\n- **開催日**: ${eventDate}\n- **エントリー期間**: ${entryPeriod}\n- **ルール**: ${t.rules ? t.rules.join(', ') : '未定'}\n\n[大会詳細ページはこちら](entry.html)`;
 
             document.getElementById('inpNewsTitle').value = title;
             document.getElementById('inpNewsBody').value = body;

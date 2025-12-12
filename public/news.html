@@ -239,20 +239,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
-    <div id="detailModal" class="modal-overlay">
-        <div class="modal-content">
-            <button class="close-btn" onclick="closeModal()">×</button>
-            <div id="mMeta" style="margin-bottom:10px; display:flex; gap:10px; align-items:center;"></div>
-            <h2 id="mTitle" style="font-size:1.8rem; margin-bottom:20px; line-height:1.3;"></h2>
-
-            <div id="mBody" class="md-content"></div>
-
-            <div id="mTourAction" style="margin-top:40px; text-align:center; display:none;">
-                <!-- Action Button for Tournament formatted news -->
-            </div>
-        </div>
-    </div>
+    <!-- Modal Removed -->
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -303,7 +290,7 @@
                     }
 
                     html += `
-                    <div class="n-item" onclick="openModal('${n.id}')">
+                    <div class="n-item" onclick="location.href='news_detail.html?id=${n.id}'">
                         <div class="n-meta">
                             <span class="n-date">${n.date.replace(/-/g, '.')}</span>
                             <span class="n-badge ${badgeClass}">${badgeText}</span>
@@ -319,74 +306,6 @@
                 listEl.innerHTML = '<div class="loader">読み込みエラーが発生しました</div>';
             }
         }
-
-        function parseMarkdown(text) {
-            if (!text) return '';
-            let html = text
-                .replace(/^# (.*$)/gim, '<h3>$1</h3>') // H1 -> H3
-                .replace(/^## (.*$)/gim, '<h3>$1</h3>') // H2 -> H3
-                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-                .replace(/__(.*)__/gim, '<u>$1</u>')
-                .replace(/~~(.*)~~/gim, '<s>$1</s>')
-                .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
-                .replace(/\n/gim, '<br>');
-
-            // Bullet list (Simple)
-            // Replace - item with bullet char, but ideally we wrap in UL. 
-            // Simplified: Just add a bullet char if line starts with -
-            html = html.replace(/^- (.*)/gim, '• $1');
-
-            return html;
-        }
-
-        window.openModal = async (id) => {
-            const n = newsData.find(x => x.id === id);
-            if (!n) return;
-
-            document.getElementById('mTitle').textContent = n.title;
-            document.getElementById('mMeta').innerHTML = `<span style="color:#718096; font-family:var(--f-eng);">${n.date}</span>`; // Add badge here if needed
-
-            document.getElementById('mBody').innerHTML = parseMarkdown(n.body);
-
-            // Tournament Action
-            const actionArea = document.getElementById('mTourAction');
-            actionArea.style.display = 'none';
-
-            if (n.type === 'tournament' && n.refTourId) {
-                // Fetch tournament status to decide button
-                try {
-                    const tRef = doc(db, "tournaments", n.refTourId);
-                    const tSnap = await getDoc(tRef);
-                    if (tSnap.exists()) {
-                        const t = tSnap.data();
-
-                        if (t.status === 'open') {
-                            actionArea.innerHTML = `<a href="entry.html" style="background:#3182ce; color:white; padding:12px 30px; border-radius:99px; font-weight:bold; display:inline-block;">大会にエントリーする</a>`;
-                            actionArea.style.display = 'block';
-                        } else if (t.winner) {
-                            // Link to Index result modal? Only if on index. On standalone page, maybe link to result page if exists?
-                            // User asked to show result.
-                            // Let's just link to home with hash or showing text
-                            actionArea.innerHTML = `
-                             <div style="background:#f7fafc; padding:20px; border-radius:8px; border:1px solid #e2e8f0; display:inline-block; text-align:left;">
-                                <strong>優勝チーム: ${t.winner.team}</strong><br>
-                                <a href="${t.winner.url}" target="_blank" style="color:#3182ce; text-decoration:underline; display:block; margin-top:5px;">結果詳細 (X)</a>
-                             </div>`;
-                            actionArea.style.display = 'block';
-                        }
-                    }
-                } catch (e) { console.error(e); }
-            }
-
-            document.getElementById('detailModal').style.display = 'flex';
-        };
-
-        window.closeModal = () => {
-            document.getElementById('detailModal').style.display = 'none';
-        };
-        document.getElementById('detailModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('detailModal')) closeModal();
-        });
 
         loadAllNews();
     </script>

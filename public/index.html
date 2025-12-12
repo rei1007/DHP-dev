@@ -1267,6 +1267,7 @@
 
             } catch (e) {
                 console.error("Error loading tournaments:", e);
+                if (tourGrid) tourGrid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#e53e3e;">大会情報の読み込みに失敗しました。</div>';
             }
         }
 
@@ -1436,7 +1437,7 @@
                     else if (latest.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'Penalty'; }
 
                     heroNewsContainer.innerHTML = `
-                    <a href="news.html" class="news-card-hero">
+                    <a href="news_detail.html?id=${latest.id}" class="news-card-hero">
                         <span class="badge-news-hero">${badgeText}</span>
                         <span style="color:#cbd5e0; font-family:var(--f-eng); font-size:0.85rem;">${latest.date.replace(/-/g, '.')}</span>
                         <span class="news-hero-title">${latest.title}</span>
@@ -1457,7 +1458,7 @@
                         else { badgeText = n.badge ? n.badge.toUpperCase() : 'INFO'; }
 
                         html += `
-                        <a href="news.html" class="news-item">
+                        <a href="news_detail.html?id=${n.id}" class="news-item">
                             <div class="news-meta">
                                 <span class="news-date">${n.date.replace(/-/g, '.')}</span>
                                 <span class="news-cat">${badgeText}</span>
