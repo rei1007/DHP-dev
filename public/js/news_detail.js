@@ -41,28 +41,80 @@ async function loadDetail() {
     }
 }
 
-function render(data) {
+async function render(data) {
     let badgeClass = 'bg-gray-200 text-gray-700';
     let badgeText = 'お知らせ';
 
     // Badge Logic
-    if (data.type === 'tournament') { badgeClass = 'status-upcoming'; badgeText = '大会情報'; } // status-upcoming has color
+    if (data.type === 'tournament') { badgeClass = 'status-upcoming'; badgeText = '大会情報'; }
     else if (data.badge === 'important') { badgeClass = 'badge-important'; badgeText = '重要'; }
     else if (data.badge === 'recruit') { badgeClass = 'badge-recruit'; badgeText = '募集'; }
     else if (data.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'Penalty'; }
-
-    // Manually setting styles for badge spans since classes might be in CSS files we just linked
-    // We reused 'news-cat' classes in index.html, let's try to map them or use inline styles for safety here or rely on global classes if we moved them to common.css?
-    // The previously extracted common.css didn't have news badges.
-    // However, news_detail.css doesn't seem to have badge classes either.
-    // Let's use inline styles for badges or rely on generic utilities if they exist.
-    // For now, I'll use inline styles mapped from badge type for simplicity and reliability.
 
     let badgeStyle = "background:#edf2f7; color:#4a5568;";
     if (data.type === 'tournament') badgeStyle = "background:#b7791f; color:white;";
     else if (data.badge === 'important' || data.badge === 'penalty') badgeStyle = "background:#e53e3e; color:white;";
     else if (data.badge === 'recruit') badgeStyle = "background:#38a169; color:white;";
 
+    // Check for linked tournament
+    let tourInfoHtml = '';
+    if (data.type === 'tournament' && data.refTourId) {
+        try {
+            const tSnap = await getDoc(doc(db, "tournaments", data.refTourId));
+            if (tSnap.exists()) {
+                const t = tSnap.data();
+                // Reuse logic from renderTourAsNews for components
+                // XP Bar
+                let xpDisplay = '';
+                if (t.xpLimit === 'none' || !t.xpLimit) {
+                     xpDisplay = '<div style="margin:20px 0; background:#f7fafc; padding:10px; border-radius:6px; border:1px solid #edf2f7; font-size:0.9rem; font-weight:bold; color:#4a5568;">XP制限なし</div>';
+                } else {
+                    xpDisplay = `
+                    <div style="margin:20px 0; background:#f7fafc; padding:10px; border-radius:6px; border:1px solid #edf2f7;">
+                        <div style="font-weight:bold; color:#2d3748; margin-bottom:5px; font-size:0.9rem;">XP制限</div>
+                        <div style="display:flex; gap:15px; font-size:0.9rem;">
+                            <div><strong>平均:</strong> ${t.xpLimit.avg}以下</div>
+                            <div><strong>最高:</strong> ${t.xpLimit.max}以下</div>
+                        </div>
+                        <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; margin-top:8px; overflow:hidden;">
+                            <div style="width:70%; height:100%; background:linear-gradient(90deg, #63b3ed 0%, #4299e1 100%);"></div>
+                        </div>
+                    </div>`;
+                }
+
+                // Cast
+                let castHtml = '';
+                if (t.caster || t.commentator) {
+                    castHtml += '<div style="margin-top:20px; font-weight:bold; margin-bottom:10px; font-size:1.1rem; border-left:3px solid #b7791f; padding-left:10px;">実況・解説</div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin-bottom:20px;">';
+                    
+                    if (t.caster && t.caster.name) {
+                        const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : '<div style="width:40px;height:40px;background:#edf2f7;border-radius:50%;"></div>';
+                        castHtml += `
+                        <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:8px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                            ${icon}
+                            <div style="flex:1;">
+                                <div style="font-size:0.75rem; color:#718096; font-weight:bold; margin-bottom:2px;">実況</div>
+                                <div style="font-weight:bold; color:#2d3748;">${t.caster.name}</div>
+                            </div>
+                        </div>`;
+                    }
+                    if (t.commentator && t.commentator.name) {
+                         const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : '<div style="width:40px;height:40px;background:#edf2f7;border-radius:50%;"></div>';
+                        castHtml += `
+                        <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:8px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+                            ${icon}
+                            <div style="flex:1;">
+                                <div style="font-size:0.75rem; color:#718096; font-weight:bold; margin-bottom:2px;">解説</div>
+                                <div style="font-weight:bold; color:#2d3748;">${t.commentator.name}</div>
+                            </div>
+                        </div>`;
+                    }
+                    castHtml += '</div>';
+                }
+                tourInfoHtml = xpDisplay + castHtml;
+            }
+        } catch(e) { console.error(e); }
+    }
 
     const html = `
     <div class="nd-header">
@@ -74,7 +126,8 @@ function render(data) {
     </div>
     <div class="nd-content">
         ${parseMarkdown(data.body)}
-        ${data.type === 'tournament' ? `<div class="btn-entry-area"><a href="entry.html?id=${id}" class="btn-entry-lg">大会詳細・エントリー</a></div>` : ''}
+        ${tourInfoHtml}
+        ${data.type === 'tournament' && data.refTourId ? `<div class="btn-entry-area"><a href="entry.html?id=${data.refTourId}" class="btn-entry-lg">大会詳細・エントリー</a></div>` : ''}
     </div>
     `;
     container.innerHTML = html;

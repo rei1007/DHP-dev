@@ -71,45 +71,46 @@ window.calcStatus = (force = false) => {
     statusEl.value = newStatus;
 };
 
-// Auth
-// Auth Logic
-const loginForm = document.getElementById('loginForm');
-const loginView = document.getElementById('loginView');
-const dashView = document.getElementById('dashView');
-const storedAuth = localStorage.getItem('dhp_auth_ok');
+// Global Listeners init
+document.addEventListener('DOMContentLoaded', () => {
+    // Auth
+    const loginForm = document.getElementById('loginForm');
+    if(loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('adminPass').value;
+            // Local dev fallback
+            if (location.protocol === 'file:' && pass === 'admin1234') {
+                proceedLogin();
+                return;
+            }
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
 
-if (storedAuth === 'true') { showDash(); }
-
-loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const pass = document.getElementById('adminPass').value;
-
-    // Local dev fallback
-    if (location.protocol === 'file:' && pass === 'admin1234') {
-        proceedLogin();
-        return;
-    }
-
-    try {
-        const res = await fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: pass })
+                if (res.ok) {
+                    proceedLogin();
+                } else {
+                    document.getElementById('loginMsg').textContent = 'パスワードが違います';
+                }
+            } catch (err) {
+                if (pass === 'admin1234') {
+                    console.warn("API unreachable, falling back to local check");
+                    proceedLogin();
+                } else {
+                    document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
+                }
+            }
         });
-
-        if (res.ok) {
-            proceedLogin();
-        } else {
-            document.getElementById('loginMsg').textContent = 'パスワードが違います';
-        }
-    } catch (err) {
-        if (pass === 'admin1234') {
-            console.warn("API unreachable, falling back to local check");
-            proceedLogin();
-        } else {
-            document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
-        }
     }
+    
+    // Init status
+    const storedAuth = localStorage.getItem('dhp_auth_ok');
+    if (storedAuth === 'true') { showDash(); }
+
 });
 
 function proceedLogin() {
