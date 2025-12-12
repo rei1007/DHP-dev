@@ -1,0 +1,137 @@
+/* --- Common Design System --- */
+:root {
+    /* Colors */
+    --c-primary: #1a365d;
+    --c-accent: #3182ce;
+    --c-text-main: #2d3748;
+    --c-text-muted: #718096;
+    --c-bg: #f7fafc;
+    --c-surface: #ffffff;
+    --c-gold: #b7791f;
+    --c-danger: #e53e3e;
+
+    --border: 1px solid #e2e8f0;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+
+    /* Fonts */
+    --f-main: 'Zen Kaku Gothic New', sans-serif;
+    --f-serif: 'Shippori Mincho', serif;
+    --f-eng: 'Oswald', sans-serif;
+
+    --sp-container: max(16px, 4vw);
+}
+
+/* Reset & Base */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 15px;
+}
+
+body {
+    font-family: var(--f-main);
+    color: var(--c-text-main);
+    background: var(--c-bg);
+    margin: 0;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+    transition: 0.2s ease;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+/* Container */
+.container {
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--sp-container);
+}
+
+/* Header */
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: var(--border);
+}
+
+.header-inner {
+    height: 70px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.brand img {
+    height: 50px;
+}
+
+/* Footer */
+.footer {
+    background: #1a202c;
+    color: #cbd5e0;
+    padding: 60px 0;
+    text-align: center;
+}
+
+.footer-logo {
+    font-family: var(--f-serif);
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: white;
+    font-weight: 700;
+}
+
+.footer-links {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    font-size: 0.9rem;
+    color: #a0aec0;
+}
+
+.footer-links a:hover {
+    color: white;
+    text-decoration: underline;
+}
+
+/* Loader */
+.loader {
+    text-align: center;
+    padding: 40px;
+    color: var(--c-text-muted);
+}

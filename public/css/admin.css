@@ -1,0 +1,268 @@
+/* Page specific styles for Admin */
+body {
+    padding-bottom: 50px;
+}
+
+.login-wrapper {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.dashboard-wrapper {
+    display: none;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.card {
+    background: var(--c-surface);
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: var(--border);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-title {
+    margin-bottom: 2rem;
+    color: var(--c-primary);
+    font-size: 1.5rem;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+}
+
+.btn {
+    background: var(--c-primary);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1rem;
+    width: 100%;
+    /* Mobile friendly */
+}
+
+@media (min-width: 600px) {
+    .btn {
+        width: auto;
+    }
+}
+
+.btn:hover {
+    opacity: 0.9;
+}
+
+.btn-green {
+    background: var(--c-accent);
+}
+
+.btn-red {
+    background: var(--c-danger);
+    color: white;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+    width: auto;
+    margin-left: 5px;
+}
+
+/* Dashboard Layout */
+.dash-header {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+@media (min-width: 600px) {
+    .dash-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        text-align: left;
+    }
+}
+
+.tournament-list {
+    display: grid;
+    gap: 20px;
+}
+
+.t-item {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    border: var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+@media (min-width: 600px) {
+    .t-item {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+}
+
+.t-info h3 {
+    margin-bottom: 5px;
+    color: var(--c-primary);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: white;
+    background: #718096;
+    white-space: nowrap;
+}
+
+.status-open {
+    background: var(--c-accent);
+}
+
+.status-upcoming {
+    background: var(--c-gold);
+}
+
+.t-status {
+    font-size: 0.85rem;
+    color: #718096;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 10px;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+@media (min-width: 600px) {
+    .modal-content {
+        padding: 30px;
+    }
+}
+
+.modal-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+@media (min-width: 768px) {
+    .modal-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.loading-mask {
+    position: fixed;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: none;
+    place-items: center;
+    z-index: 2000;
+    font-weight: bold;
+}
+
+/* Custom Input Groups */
+.checkbox-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    background: #edf2f7;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.checkbox-label input {
+    width: auto;
+    margin: 0;
+}
+
+.checkbox-label:has(input:checked) {
+    background: #bee3f8;
+    color: var(--c-primary);
+}
+
+.stage-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #cbd5e0;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+fieldset {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+legend {
+    padding: 0 10px;
+    font-weight: bold;
+    color: var(--c-primary);
+}
