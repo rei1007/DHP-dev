@@ -430,6 +430,11 @@
                                 <input type="url" id="inpCasterIcon" placeholder="https://...">
                             </div>
                         </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                            <div><input type="text" id="inpCasterX" placeholder="実況 X (Twitter) ID (@...)"></div>
+                            <div><input type="url" id="inpCasterYt" placeholder="実況 YouTube URL"></div>
+                        </div>
+
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                             <div>
                                 <label style="font-size:0.8rem;">解説者名</label>
@@ -439,6 +444,10 @@
                                 <label style="font-size:0.8rem;">解説アイコンURL</label>
                                 <input type="url" id="inpComIcon" placeholder="https://...">
                             </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
+                            <div><input type="text" id="inpComX" placeholder="解説 X (Twitter) ID (@...)"></div>
+                            <div><input type="url" id="inpComYt" placeholder="解説 YouTube URL"></div>
                         </div>
                         <!-- 配信・許諾 -->
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -812,11 +821,17 @@
             document.getElementById('inpWinMem3').value = members[2] || '';
             document.getElementById('inpWinMem4').value = members[3] || '';
 
-            // Caster / License
+            // Caster/Com
             document.getElementById('inpCasterName').value = t.caster?.name || '';
             document.getElementById('inpCasterIcon').value = t.caster?.icon || '';
+            document.getElementById('inpCasterX').value = t.caster?.x || '';
+            document.getElementById('inpCasterYt').value = t.caster?.yt || '';
+
             document.getElementById('inpComName').value = t.commentator?.name || '';
             document.getElementById('inpComIcon').value = t.commentator?.icon || '';
+            document.getElementById('inpComX').value = t.commentator?.x || '';
+            document.getElementById('inpComYt').value = t.commentator?.yt || '';
+
             document.getElementById('inpOpName').value = t.operator || '';
             document.getElementById('inpLicense').value = t.license || '';
             document.getElementById('inpArchiveUrl').value = t.archiveUrl || '';
@@ -877,18 +892,24 @@
                 rules: selRules,
                 banStages: selStages,
                 updatedAt: new Date().toISOString(),
-                caster: {
-                    name: document.getElementById('inpCasterName').value,
-                    icon: document.getElementById('inpCasterIcon').value
-                },
-                commentator: {
-                    name: document.getElementById('inpComName').value,
-                    icon: document.getElementById('inpComIcon').value
-                },
                 operator: document.getElementById('inpOpName').value,
                 license: document.getElementById('inpLicense').value,
                 archiveUrl: document.getElementById('inpArchiveUrl').value
             };
+            // Cast
+            data.caster = {
+                name: document.getElementById('inpCasterName').value,
+                icon: document.getElementById('inpCasterIcon').value,
+                x: document.getElementById('inpCasterX').value,
+                yt: document.getElementById('inpCasterYt').value
+            };
+            data.commentator = {
+                name: document.getElementById('inpComName').value,
+                icon: document.getElementById('inpComIcon').value,
+                x: document.getElementById('inpComX').value,
+                yt: document.getElementById('inpComYt').value
+            };
+
 
             const wTeam = document.getElementById('inpWinTeamName').value;
             const wUniv = document.getElementById('inpWinUniv').value;
@@ -972,13 +993,21 @@
                 newsList.forEach(n => {
                     const div = document.createElement('div');
                     div.className = 't-item'; // Reuse styles
-                    const badge = n.type === 'tournament'
-                        ? '<span class="status-badge status-upcoming">大会情報</span>'
-                        : `<span class="status-badge" style="background:#e2e8f0; color:#4a5568;">${n.badge || 'News'}</span>`;
+                    let badgeHtml = '';
+                    if (n.type === 'tournament') {
+                        badgeHtml = '<span class="status-badge status-upcoming">大会情報</span>';
+                    } else {
+                        let bInfo = { color: '#e2e8f0', text: 'お知らせ', textColor: '#4a5568' };
+                        if (n.badge === 'important') { bInfo = { color: '#e53e3e', text: '重要', textColor: 'white' }; }
+                        else if (n.badge === 'recruit') { bInfo = { color: '#38a169', text: '募集', textColor: 'white' }; }
+                        else if (n.badge === 'penalty') { bInfo = { color: '#e53e3e', text: 'ペナルティ', textColor: 'white' }; }
+
+                        badgeHtml = `<span class="status-badge" style="background:${bInfo.color}; color:${bInfo.textColor};">${bInfo.text}</span>`;
+                    }
 
                     div.innerHTML = `
                         <div class="t-info">
-                            <h3>${badge} ${n.title}</h3>
+                            <h3>${badgeHtml} ${n.title}</h3>
                             <div class="t-status">公開日: ${n.date}</div>
                         </div>
                         <div class="t-actions">

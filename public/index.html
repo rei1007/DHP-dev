@@ -271,7 +271,8 @@
         /* News Bridge */
         .news-bridge {
             position: absolute;
-            top: 80px;
+            top: auto;
+            bottom: 20px;
             left: 0;
             width: 100%;
             z-index: 10;
@@ -787,11 +788,106 @@
             position: absolute;
             top: 15px;
             right: 15px;
-            font-size: 1.5rem;
-            color: #718096;
-            background: none;
+            font-size: 2.5rem;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4a5568;
+            background: #edf2f7;
+            border-radius: 50%;
             border: none;
             cursor: pointer;
+            transition: 0.2s;
+            z-index: 10;
+        }
+
+        .res-close:hover {
+            background: #e2e8f0;
+            color: var(--c-primary);
+        }
+
+        .cast-card {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .cast-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cast-role {
+            font-size: 0.75rem;
+            color: #718096;
+            font-weight: bold;
+            background: #edf2f7;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 5px;
+        }
+
+        .cast-name {
+            font-weight: bold;
+            color: var(--c-primary);
+        }
+
+        .cast-links {
+            display: flex;
+            gap: 8px;
+        }
+
+        .cast-link-btn {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            background: white;
+            border: 1px solid #cbd5e0;
+            color: #4a5568;
+            transition: 0.2s;
+        }
+
+        .cast-link-btn:hover {
+            border-color: var(--c-accent);
+            color: var(--c-accent);
+        }
+
+        .res-btn-common {
+            width: 100%;
+            text-align: center;
+            display: block;
+            padding: 12px 0;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            transition: 0.2s;
+            text-decoration: none;
+        }
+
+        .res-btn-primary {
+            background: var(--c-primary);
+            color: white;
+        }
+
+        .res-btn-secondary {
+            background: white;
+            color: var(--c-primary);
+            border: 2px solid var(--c-primary);
+        }
+
+        .res-btn-secondary:hover {
+            background: #ebf8ff;
         }
 
         .mob-dash-btn {
@@ -1100,10 +1196,23 @@
             </div>
             <div id="resCastArea" style="margin:20px 0; padding-top:10px; border-top:1px solid #eee; font-size:0.9rem;">
             </div>
-            <a id="resLink" href="#" target="_blank" class="btn-cta"
-                style="width:100%; text-align:center; display:block; background:var(--c-primary);">結果の詳細を見る (X)</a>
-            <a id="resArchiveBtn" href="#" target="_blank" class="btn-dash-nav"
-                style="width:100%; text-align:center; display:none; margin-top:10px; background:#edf2f7; color:#718096; border:none;">アーカイブ動画を見る</a>
+            <!-- SVG Definitions -->
+            <svg style="display:none;">
+                <symbol id="icon-x" viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </symbol>
+                <symbol id="icon-yt" viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                        d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </symbol>
+            </svg>
+
+            <!-- Buttons: Archive Top, Post Bottom -->
+            <a id="resArchiveBtn" href="#" target="_blank" class="res-btn-common res-btn-primary"
+                style="display:none;">アーカイブ動画を見る</a>
+            <a id="resLink" href="#" target="_blank" class="res-btn-common res-btn-secondary"
+                style="display:none;">優勝ポストを見る</a>
         </div>
     </div>
 
@@ -1343,7 +1452,7 @@
                 w.members.forEach(m => {
                     memArea.innerHTML += `
                         <div class="res-mem-item">
-                            <div class="res-mem-icon"></div>
+                            <!-- Icon removed -->
                             ${m}
                         </div>
                     `;
@@ -1357,44 +1466,69 @@
             let castHtml = '';
 
             // Caster
+            // Caster
             if (t.caster && t.caster.name) {
-                const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; margin-right:5px;">` : '';
-                castHtml += `<div style="display:flex; align-items:center; margin-bottom:5px;"><strong>実況:</strong> <span style="margin-left:8px; display:flex; align-items:center;">${icon}${t.caster.name}</span></div>`;
+                const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : '<div style="width:32px;height:32px;background:#edf2f7;border-radius:50%;"></div>';
+
+                let links = '';
+                if (t.caster.x) links += `<a href="https://twitter.com/${t.caster.x.replace('@', '')}" target="_blank" class="cast-link-btn"><svg width="14" height="14"><use href="#icon-x"/></svg></a>`;
+                if (t.caster.yt) links += `<a href="${t.caster.yt}" target="_blank" class="cast-link-btn"><svg width="16" height="16"><use href="#icon-yt"/></svg></a>`;
+
+                castHtml += `
+                <div class="cast-card">
+                    <div class="cast-info">
+                        ${icon}
+                        <div><span class="cast-role">実況</span> <span class="cast-name">${t.caster.name}</span></div>
+                    </div>
+                    <div class="cast-links">${links}</div>
+                </div>`;
             }
             // Commentator
             if (t.commentator && t.commentator.name) {
-                const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; margin-right:5px;">` : '';
-                castHtml += `<div style="display:flex; align-items:center; margin-bottom:5px;"><strong>解説:</strong> <span style="margin-left:8px; display:flex; align-items:center;">${icon}${t.commentator.name}</span></div>`;
+                const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : '<div style="width:32px;height:32px;background:#edf2f7;border-radius:50%;"></div>';
+
+                let links = '';
+                if (t.commentator.x) links += `<a href="https://twitter.com/${t.commentator.x.replace('@', '')}" target="_blank" class="cast-link-btn"><svg width="14" height="14"><use href="#icon-x"/></svg></a>`;
+                if (t.commentator.yt) links += `<a href="${t.commentator.yt}" target="_blank" class="cast-link-btn"><svg width="16" height="16"><use href="#icon-yt"/></svg></a>`;
+
+                castHtml += `
+                <div class="cast-card">
+                    <div class="cast-info">
+                        ${icon}
+                        <div><span class="cast-role">解説</span> <span class="cast-name">${t.commentator.name}</span></div>
+                    </div>
+                    <div class="cast-links">${links}</div>
+                </div>`;
             }
 
             // Operator
             if (t.operator) {
-                castHtml += `<div style="margin-bottom:5px;"><strong>配信:</strong> ${t.operator}</div>`;
+                castHtml += `<div style="margin-bottom:5px; font-size:0.9rem; margin-top:10px;"><strong>配信:</strong> ${t.operator}</div>`;
             }
 
             // License
             if (t.license) {
-                castHtml += `<div style="margin-top:10px; font-size:0.75rem; color:#a0aec0;">許諾番号: ${t.license}</div>`;
+                castHtml += `<div style="font-size:0.75rem; color:#a0aec0;">許諾番号: ${t.license}</div>`;
             }
 
             castArea.innerHTML = castHtml;
 
-            // Link
-            const linkBtn = document.getElementById('resLink');
-            if (w.url) {
-                linkBtn.href = w.url;
-                linkBtn.style.display = 'block';
-            } else {
-                linkBtn.style.display = 'none';
-            }
-
-            // Archive Link
+            // Buttons: Archive & Post
             const archiveBtn = document.getElementById('resArchiveBtn');
             if (t.archiveUrl) {
                 archiveBtn.href = t.archiveUrl;
                 archiveBtn.style.display = 'block';
             } else {
                 archiveBtn.style.display = 'none';
+            }
+
+            const linkBtn = document.getElementById('resLink');
+            if (w.url) {
+                linkBtn.href = w.url;
+                linkBtn.innerText = '優勝ポストを見る'; // Text Update
+                linkBtn.style.display = 'block';
+            } else {
+                linkBtn.style.display = 'none';
             }
 
             modal.classList.add('active');
@@ -1457,7 +1591,11 @@
                         else if (n.badge === 'important') { badgeClass = 'badge-important'; badgeText = '重要'; }
                         else if (n.badge === 'recruit') { badgeClass = 'badge-recruit'; badgeText = '運営募集'; }
                         else if (n.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'ペナルティ'; }
-                        else { badgeText = n.badge ? n.badge.toUpperCase() : 'INFO'; }
+                        if (n.type === 'tournament') { badgeClass = 'status-upcoming'; badgeText = '大会情報'; }
+                        else if (n.badge === 'important') { badgeClass = 'badge-important'; badgeText = '重要'; }
+                        else if (n.badge === 'recruit') { badgeClass = 'badge-recruit'; badgeText = '募集'; }
+                        else if (n.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'ペナルティ'; }
+                        else { badgeText = 'お知らせ'; }
 
                         html += `
                         <a href="news_detail.html?id=${n.id}" class="news-item">
