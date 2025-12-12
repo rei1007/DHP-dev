@@ -314,16 +314,38 @@
 
     <!-- 2. Dashboard View -->
     <div id="dashView" class="dashboard-wrapper">
-        <div class="dash-header">
-            <div>
-                <h2>大会データ管理</h2>
-                <div style="font-size:0.8rem; color:#718096;">Firestore: tournaments</div>
-            </div>
-            <button class="btn btn-green" id="btnNew">＋ 新規大会作成</button>
+        <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <button class="btn" id="tabBtnTour" onclick="switchTab('tour')">大会管理</button>
+            <button class="btn" id="tabBtnNews" onclick="switchTab('news')"
+                style="background:transparent; border:1px solid #cbd5e0; color:#4a5568;">お知らせ管理</button>
         </div>
 
-        <div class="tournament-list" id="tList">
-            <!-- JSでリスト生成 -->
+        <!-- Tournament Tab -->
+        <div id="panelTour">
+            <div class="dash-header">
+                <div>
+                    <h2>大会データ管理</h2>
+                    <div style="font-size:0.8rem; color:#718096;">Firestore: tournaments</div>
+                </div>
+                <button class="btn btn-green" id="btnNew">＋ 新規大会作成</button>
+            </div>
+            <div class="tournament-list" id="tList">
+                <!-- JS injected -->
+            </div>
+        </div>
+
+        <!-- News Tab -->
+        <div id="panelNews" style="display:none;">
+            <div class="dash-header">
+                <div>
+                    <h2>お知らせ管理</h2>
+                    <div style="font-size:0.8rem; color:#718096;">Firestore: news</div>
+                </div>
+                <button class="btn btn-green" id="btnNewNews">＋ お知らせ作成</button>
+            </div>
+            <div class="tournament-list" id="nList">
+                <!-- JS injected -->
+            </div>
         </div>
     </div>
 
@@ -429,14 +451,16 @@
                                 <input type="text" id="inpLicense" placeholder="NJ...">
                             </div>
                         </div>
+                        <div style="margin-top:10px;">
+                            <label style="font-size:0.8rem;">アーカイブ動画URL</label>
+                            <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
+                        </div>
 
                         <!-- 優勝チーム情報 -->
                     </div>
                 </div>
 
-                <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
-
-                <h4>優勝チーム情報（終了後入力）</h4>
+                <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">優勝チーム情報（終了後入力）</h4>
                 <div style="margin-bottom:15px;">
                     <label style="font-size:0.9rem;">優勝画像URL (16:9)</label>
                     <input type="url" id="inpWinImage" placeholder="https://example.com/image.jpg">
@@ -463,6 +487,78 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- NEWS MODAL -->
+    <div id="newsModal" class="modal">
+        <div class="modal-content" style="max-width:800px;">
+            <h2 id="newsModalTitle" style="margin-bottom:20px;">お知らせ編集</h2>
+            <form id="newsForm">
+                <input type="hidden" id="newsId">
+
+                <div style="margin-bottom:15px;">
+                    <label>フォーマット</label>
+                    <div style="display:flex; gap:20px; margin-top:5px;">
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <input type="radio" name="newsType" value="normal" checked onchange="toggleNewsType()">
+                            通常フォーマット
+                        </label>
+                        <label style="display:flex; align-items:center; cursor:pointer;">
+                            <input type="radio" name="newsType" value="tournament" onchange="toggleNewsType()"> 大会フォーマット
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Normal options -->
+                <div id="newsTypeNormal">
+                    <label>バッジ選択</label>
+                    <select id="inpNewsBadge" style="margin-bottom:10px;">
+                        <option value="info">お知らせ (Info)</option>
+                        <option value="important">重要 (Important)</option>
+                        <option value="recruit">運営募集 (Recruit)</option>
+                        <option value="penalty">ペナルティ (Penalty)</option>
+                    </select>
+                </div>
+
+                <!-- Tournament options -->
+                <div id="newsTypeTour"
+                    style="display:none; background:#f7fafc; padding:15px; border-radius:8px; margin-bottom:15px;">
+                    <label>対象大会</label>
+                    <div style="display:flex; gap:10px;">
+                        <select id="inpNewsTourId" style="flex:1;">
+                            <option value="">大会を選択してください</option>
+                        </select>
+                        <button type="button" class="btn btn-sm" onclick="generateDraft()">下書き生成</button>
+                    </div>
+                    <p style="font-size:0.8rem; color:gray; margin-top:5px;">※大会を選択して「下書き生成」を押すと、本文が自動入力されます。</p>
+                </div>
+
+                <div>
+                    <label>タイトル</label>
+                    <input type="text" id="inpNewsTitle" placeholder="タイトルを入力" required>
+                </div>
+
+                <!-- Date -->
+                <div style="margin-bottom:10px;">
+                    <label>公開日</label>
+                    <input type="date" id="inpNewsDate" required>
+                </div>
+
+                <div>
+                    <label>本文 (Markdown)</label>
+                    <div style="font-size:0.8rem; color:gray; margin-bottom:5px;">
+                        #見出し, -箇条書き, **強調**, __下線__, ~~取消~~, [リンク](URL)
+                    </div>
+                    <textarea id="inpNewsBody" rows="10" placeholder="お知らせ本文..." required></textarea>
+                </div>
+
+                <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
+                    <button type="button" class="btn btn-red" id="btnCloseNewsModal">キャンセル</button>
+                    <button type="submit" class="btn">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
     </div>
 
     <!-- Firebase SDK & Logic -->
@@ -721,6 +817,7 @@
             document.getElementById('inpComIcon').value = t.commentator?.icon || '';
             document.getElementById('inpOpName').value = t.operator || '';
             document.getElementById('inpLicense').value = t.license || '';
+            document.getElementById('inpArchiveUrl').value = t.archiveUrl || '';
 
             modal.style.display = 'flex';
         };
@@ -787,7 +884,8 @@
                     icon: document.getElementById('inpComIcon').value
                 },
                 operator: document.getElementById('inpOpName').value,
-                license: document.getElementById('inpLicense').value
+                license: document.getElementById('inpLicense').value,
+                archiveUrl: document.getElementById('inpArchiveUrl').value
             };
 
             const wTeam = document.getElementById('inpWinTeamName').value;

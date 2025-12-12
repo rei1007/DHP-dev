@@ -899,12 +899,8 @@
         </div>
 
         <div class="news-bridge">
-            <div class="container">
-                <a href="news.html" class="news-card-hero">
-                    <span class="badge-news-hero">NEWS</span>
-                    <span style="color:#cbd5e0; font-family:var(--f-eng); font-size:0.85rem;">2025.12.10</span>
-                    <span class="news-hero-title">「第10回大学杯〜2026春の陣〜」開催決定のお知らせ</span>
-                </a>
+            <div class="container" id="heroNewsContainer">
+                <!-- Loaded by JS -->
             </div>
         </div>
     </section>
@@ -990,42 +986,8 @@
                 <p>最新のお知らせ</p>
             </div>
 
-            <div class="news-list-container">
-                <a href="#" class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2025.12.10</span>
-                        <span class="news-cat">大会情報</span>
-                    </div>
-                    <div class="news-item-title">「第10回大学杯〜2026春の陣〜」開催決定のお知らせ</div>
-                </a>
-                <a href="#" class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2025.12.05</span>
-                        <span class="news-cat">エントリー</span>
-                    </div>
-                    <div class="news-item-title">初級者向け大会「大学杯θ（シータ）」エントリー受付開始</div>
-                </a>
-                <a href="#" class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2025.11.28</span>
-                        <span class="news-cat">重要</span>
-                    </div>
-                    <div class="news-item-title">【重要】2026シーズンからのルール改定について</div>
-                </a>
-                <a href="#" class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2025.11.15</span>
-                        <span class="news-cat">メディア</span>
-                    </div>
-                    <div class="news-item-title">大学杯真打 アーカイブ動画の公開</div>
-                </a>
-                <a href="#" class="news-item">
-                    <div class="news-meta">
-                        <span class="news-date">2025.10.30</span>
-                        <span class="news-cat">レポート</span>
-                    </div>
-                    <div class="news-item-title">「大学杯 W（イカップル杯）」大会レポートを公開しました</div>
-                </a>
+            <div class="news-list-container" id="newsList">
+                <!-- Loaded by JS -->
             </div>
 
             <div style="text-align:center; margin-top:30px;">
@@ -1119,6 +1081,8 @@
             </div>
             <a id="resLink" href="#" target="_blank" class="btn-cta"
                 style="width:100%; text-align:center; display:block; background:var(--c-primary);">結果の詳細を見る (X)</a>
+            <a id="resArchiveBtn" href="#" target="_blank" class="btn-dash-nav"
+                style="width:100%; text-align:center; display:none; margin-top:10px; background:#ff0000; color:white; border:none;">アーカイブ動画を見る</a>
         </div>
     </div>
 
@@ -1229,25 +1193,24 @@
 
                     // Cast Info (List)
                     let castInfo = '';
-                    if (t.caster && t.caster.name) {
-                        const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
-                        castInfo += `<div style="font-size:0.85rem; margin-top:4px; color:#4a5568;">🎙️ 実況: ${icon}${t.caster.name}</div>`;
-                    }
-                    if (t.commentator && t.commentator.name) {
-                        const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
-                        castInfo += `<div style="font-size:0.85rem; margin-top:2px; color:#4a5568;">📝 解説: ${icon}${t.commentator.name}</div>`;
-                    }
+                    const casterName = (t.caster && t.caster.name) ? t.caster.name : '未定';
+                    const casterIcon = (t.caster && t.caster.icon) ? `<img src="${t.caster.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
+                    castInfo += `<div style="font-size:0.85rem; margin-top:4px; color:#4a5568;">🎙️ 実況: ${casterIcon}${casterName}</div>`;
+
+                    const comName = (t.commentator && t.commentator.name) ? t.commentator.name : '未定';
+                    const comIcon = (t.commentator && t.commentator.icon) ? `<img src="${t.commentator.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
+                    castInfo += `<div style="font-size:0.85rem; margin-top:2px; color:#4a5568;">📝 解説: ${comIcon}${comName}</div>`;
 
                     // Action
                     let actionHtml = '';
                     if (t.status === 'open') {
-                        actionHtml = `<a href="entry.html" class="btn-dash-nav" style="width:100%; text-align:center; margin-top:15px; background:var(--c-accent); color:white; border:none;">詳細・エントリー</a>`;
+                        actionHtml = `<a href="javascript:void(0)" onclick="location.href='entry.html'" class="btn-dash-nav" style="width:100%; text-align:center; background:var(--c-accent); color:white; border:none; display:block;">詳細・エントリー</a>`;
                     } else if (t.status === 'upcoming') {
-                        actionHtml = `<span style="color:var(--c-text-muted); font-size:0.9rem; margin-top:15px;">情報は後日公開</span>`;
+                        actionHtml = `<span style="color:var(--c-text-muted); font-size:0.9rem;">情報は後日公開</span>`;
                     } else {
                         // モーダルを開く条件：Win情報があるか
                         if (t.winner?.team || t.winner?.url) {
-                            actionHtml = `<a href="javascript:void(0)" onclick="openResultModal('${t.id}'); return false;" style="color:var(--c-primary); font-size:0.9rem; text-decoration:underline;">結果を見る</a>`;
+                            actionHtml = `<button onclick="openResultModal('${t.id}');" class="btn-dash-nav" style="width:100%; background:white; color:var(--c-primary); border:1px solid var(--c-primary); cursor:pointer;">結果を見る</button>`;
                         } else {
                             actionHtml = `<span style="color:var(--c-text-muted); font-size:0.9rem;">終了しました</span>`;
                         }
@@ -1260,13 +1223,13 @@
                             <div>
                                 <h3 class="tour-title">${t.name}</h3>
                                 <div class="tour-meta">
-                                    <div title="開催日" class="tour-date-stress">${dateIcon} ${dateDisplay}</div>
+                                    <div title="開催日" class="${(t.status === 'open' || (t.status === 'upcoming' && t.eventDate)) ? 'tour-date-stress' : ''}">${dateIcon} ${dateDisplay}</div>
                                     <div title="ルール">${flagIcon} ${rulesStr}</div>
                                 </div>
                                 ${entryDisplay ? `<div style="margin-top:5px;"><span style="font-size:0.8rem; background:#edf2f7; color:#4a5568; padding:2px 8px; border-radius:4px;">エントリー <span class="tour-entry-stress">${entryDisplay}</span></span></div>` : ''}
                                 ${castInfo}
                             </div>
-                            ${actionHtml}
+                            <div style="margin-top:10px;">${actionHtml}</div>
                         </div>
                     </div>
                     `;
@@ -1397,6 +1360,15 @@
                 linkBtn.style.display = 'none';
             }
 
+            // Archive Link
+            const archiveBtn = document.getElementById('resArchiveBtn');
+            if (t.archiveUrl) {
+                archiveBtn.href = t.archiveUrl;
+                archiveBtn.style.display = 'block';
+            } else {
+                archiveBtn.style.display = 'none';
+            }
+
             modal.classList.add('active');
             modal.style.display = 'flex';
         };
@@ -1412,6 +1384,62 @@
 
         // Load on start
         loadTournaments();
+        loadIndexNews();
+
+        async function loadIndexNews() {
+            const newsList = document.getElementById('newsList');
+            const heroNewsContainer = document.getElementById('heroNewsContainer');
+
+            try {
+                const q = query(collection(db, "news"), orderBy("date", "desc"), limit(5));
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) {
+                    newsGrid.innerHTML = '<div style="padding:20px; text-align:center; color:#a0aec0;">お知らせはありません</div>';
+                    return;
+                }
+
+                const news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Hero News (Latest 1)
+                const latest = news[0];
+                if (latest) {
+                    let badgeClass = 'badge-info';
+                    let badgeText = 'News';
+                    if (latest.type === 'tournament') { badgeClass = 'status-upcoming'; badgeText = '大会情報'; } // Use existing class
+                    else if (latest.badge === 'important') { badgeClass = 'badge-important'; badgeText = '重要'; }
+                    else if (latest.badge === 'recruit') { badgeClass = 'badge-recruit'; badgeText = '募集'; }
+                    else if (latest.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'Penalty'; } // reuse color
+
+                    heroNews.innerHTML = `<span class="badge ${badgeClass}">${badgeText}</span> <span class="hero-news-text">${latest.title}</span>`;
+                    heroNews.style.display = 'inline-flex';
+                    heroNews.onclick = () => location.href = 'news.html'; // Simple redirect
+                    heroNews.style.cursor = 'pointer';
+                }
+
+                // List
+                let html = '';
+                news.forEach(n => {
+                    let badgeClass = 'badge-info';
+                    let badgeText = 'お知らせ';
+                    if (n.type === 'tournament') { badgeClass = 'status-upcoming'; badgeText = '大会情報'; }
+                    else if (n.badge === 'important') { badgeClass = 'badge-important'; badgeText = '重要'; }
+                    else if (n.badge === 'recruit') { badgeClass = 'badge-recruit'; badgeText = '運営募集'; }
+                    else if (n.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'ペナルティ'; }
+
+                    html += `
+                    <a href="news.html" class="news-card">
+                        <div class="news-date">${n.date.replace(/-/g, '.')}</div>
+                        <div class="news-content">
+                            <span class="badge ${badgeClass}">${badgeText}</span>
+                            <h3 class="news-title">${n.title}</h3>
+                        </div>
+                    </a>
+                    `;
+                });
+                newsGrid.innerHTML = html;
+
+            } catch (e) { console.error('News load error', e); }
+        }
     </script>
     <script>
         const hamBtn = document.getElementById('hamBtn');

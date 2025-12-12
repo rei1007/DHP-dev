@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News | 大学杯 Inkollege Student Cup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Oswald:wght@500&family=Shippori+Mincho:wght@700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --c-primary: #1a365d;
+            --c-accent: #3182ce;
+            --c-text-main: #2d3748;
+            --c-text-muted: #718096;
+            --c-bg: #f7fafc;
+            --c-surface: #ffffff;
+            --border: 1px solid #e2e8f0;
+            --f-main: 'Zen Kaku Gothic New', sans-serif;
+            --f-serif: 'Shippori Mincho', serif;
+            --f-eng: 'Oswald', sans-serif;
+        }
+
+        body {
+            font-family: var(--f-main);
+            color: var(--c-text-main);
+            background: var(--c-bg);
+            margin: 0;
+            line-height: 1.6;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        /* Header (Same as index) */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-bottom: var(--border);
+        }
+
+        .header-inner {
+            height: 70px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .brand img {
+            height: 50px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* News Section */
+        .news-page {
+            padding-top: 120px;
+            padding-bottom: 80px;
+        }
+
+        .page-title {
+            font-family: var(--f-serif);
+            font-size: 2.5rem;
+            color: var(--c-primary);
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .n-list {
+            background: white;
+            border-radius: 8px;
+            border: var(--border);
+            overflow: hidden;
+        }
+
+        .n-item {
+            padding: 20px;
+            border-bottom: 1px solid #edf2f7;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .n-item:hover {
+            background: #f8fafc;
+        }
+
+        .n-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+
+        .n-date {
+            color: var(--c-text-muted);
+            font-size: 0.9rem;
+            font-family: var(--f-eng);
+        }
+
+        .n-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .n-badge.info {
+            background: #718096;
+        }
+
+        .n-badge.important {
+            background: #e53e3e;
+        }
+
+        .n-badge.recruit {
+            background: #38a169;
+        }
+
+        .n-badge.tour {
+            background: #d69e2e;
+        }
+
+        .n-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            border-radius: 8px;
+            overflow-y: auto;
+            padding: 40px;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 2rem;
+            border: none;
+            background: none;
+            cursor: pointer;
+        }
+
+        /* Markdown Styles */
+        .md-content {
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .md-content h3 {
+            font-size: 1.4rem;
+            color: var(--c-primary);
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--c-accent);
+            padding-left: 10px;
+        }
+
+        .md-content p {
+            margin-bottom: 15px;
+        }
+
+        .md-content ul {
+            padding-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .md-content li {
+            margin-bottom: 5px;
+        }
+
+        .md-content strong {
+            color: var(--c-primary);
+        }
+
+        .md-content a {
+            color: var(--c-accent);
+            text-decoration: underline;
+        }
+
+        /* Loader */
+        .loader {
+            text-align: center;
+            padding: 40px;
+            color: var(--c-text-muted);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="header-inner">
+            <a href="/" class="brand"><img src="icon/大学杯ロゴ.png" alt="Logo"></a>
+            <a href="/" style="font-weight:bold; font-size:0.9rem; color:var(--c-primary);">ホームに戻る</a>
+        </div>
+    </header>
+
+    <div class="news-page container">
+        <h1 class="page-title">News</h1>
+        <div class="n-list" id="nList">
+            <div class="loader">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="detailModal" class="modal-overlay">
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeModal()">×</button>
+            <div id="mMeta" style="margin-bottom:10px; display:flex; gap:10px; align-items:center;"></div>
+            <h2 id="mTitle" style="font-size:1.8rem; margin-bottom:20px; line-height:1.3;"></h2>
+
+            <div id="mBody" class="md-content"></div>
+
+            <div id="mTourAction" style="margin-top:40px; text-align:center; display:none;">
+                <!-- Action Button for Tournament formatted news -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, query, orderBy, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaVNHlJBoWcn9BQd7jPFtELxsOLHCZdv0",
+            authDomain: "daigakuhai.firebaseapp.com",
+            projectId: "daigakuhai",
+            storageBucket: "daigakuhai.firebasestorage.app",
+            messagingSenderId: "1003642519018",
+            appId: "1:1003642519018:web:2700931b9f1c451ec74693"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        let newsData = [];
+
+        async function loadAllNews() {
+            const listEl = document.getElementById('nList');
+            try {
+                const q = query(collection(db, "news"), orderBy("date", "desc"));
+                const snapshot = await getDocs(q);
+                newsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                if (newsData.length === 0) {
+                    listEl.innerHTML = '<div class="loader">お知らせはありません</div>';
+                    return;
+                }
+
+                let html = '';
+                newsData.forEach(n => {
+                    let badgeClass = 'info';
+                    let badgeText = 'お知らせ';
+
+                    if (n.type === 'tournament') { badgeClass = 'tour'; badgeText = '大会情報'; }
+                    else if (n.badge === 'important') badgeClass = 'important';
+                    else if (n.badge === 'recruit') badgeClass = 'recruit';
+                    else if (n.badge === 'penalty') { badgeClass = 'important'; badgeText = 'ペナルティ'; } // use red
+
+                    if (n.badge && n.type !== 'tournament' && badgeClass === 'info') {
+                        // Custom mapping or fallback
+                        if (n.badge === 'important') { badgeText = '重要'; }
+                        else if (n.badge === 'recruit') { badgeText = '募集'; }
+                        else if (n.badge === 'info') { badgeText = 'お知らせ'; }
+                        else { badgeText = n.badge.toUpperCase(); }
+                    }
+
+                    html += `
+                    <div class="n-item" onclick="openModal('${n.id}')">
+                        <div class="n-meta">
+                            <span class="n-date">${n.date.replace(/-/g, '.')}</span>
+                            <span class="n-badge ${badgeClass}">${badgeText}</span>
+                        </div>
+                        <div class="n-title">${n.title}</div>
+                    </div>
+                    `;
+                });
+                listEl.innerHTML = html;
+
+            } catch (e) {
+                console.error(e);
+                listEl.innerHTML = '<div class="loader">読み込みエラーが発生しました</div>';
+            }
+        }
+
+        function parseMarkdown(text) {
+            if (!text) return '';
+            let html = text
+                .replace(/^# (.*$)/gim, '<h3>$1</h3>') // H1 -> H3
+                .replace(/^## (.*$)/gim, '<h3>$1</h3>') // H2 -> H3
+                .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+                .replace(/__(.*)__/gim, '<u>$1</u>')
+                .replace(/~~(.*)~~/gim, '<s>$1</s>')
+                .replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
+                .replace(/\n/gim, '<br>');
+
+            // Bullet list (Simple)
+            // Replace - item with bullet char, but ideally we wrap in UL. 
+            // Simplified: Just add a bullet char if line starts with -
+            html = html.replace(/^- (.*)/gim, '• $1');
+
+            return html;
+        }
+
+        window.openModal = async (id) => {
+            const n = newsData.find(x => x.id === id);
+            if (!n) return;
+
+            document.getElementById('mTitle').textContent = n.title;
+            document.getElementById('mMeta').innerHTML = `<span style="color:#718096; font-family:var(--f-eng);">${n.date}</span>`; // Add badge here if needed
+
+            document.getElementById('mBody').innerHTML = parseMarkdown(n.body);
+
+            // Tournament Action
+            const actionArea = document.getElementById('mTourAction');
+            actionArea.style.display = 'none';
+
+            if (n.type === 'tournament' && n.refTourId) {
+                // Fetch tournament status to decide button
+                try {
+                    const tRef = doc(db, "tournaments", n.refTourId);
+                    const tSnap = await getDoc(tRef);
+                    if (tSnap.exists()) {
+                        const t = tSnap.data();
+
+                        if (t.status === 'open') {
+                            actionArea.innerHTML = `<a href="entry.html" style="background:#3182ce; color:white; padding:12px 30px; border-radius:99px; font-weight:bold; display:inline-block;">大会にエントリーする</a>`;
+                            actionArea.style.display = 'block';
+                        } else if (t.winner) {
+                            // Link to Index result modal? Only if on index. On standalone page, maybe link to result page if exists?
+                            // User asked to show result.
+                            // Let's just link to home with hash or showing text
+                            actionArea.innerHTML = `
+                             <div style="background:#f7fafc; padding:20px; border-radius:8px; border:1px solid #e2e8f0; display:inline-block; text-align:left;">
+                                <strong>優勝チーム: ${t.winner.team}</strong><br>
+                                <a href="${t.winner.url}" target="_blank" style="color:#3182ce; text-decoration:underline; display:block; margin-top:5px;">結果詳細 (X)</a>
+                             </div>`;
+                            actionArea.style.display = 'block';
+                        }
+                    }
+                } catch (e) { console.error(e); }
+            }
+
+            document.getElementById('detailModal').style.display = 'flex';
+        };
+
+        window.closeModal = () => {
+            document.getElementById('detailModal').style.display = 'none';
+        };
+        document.getElementById('detailModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('detailModal')) closeModal();
+        });
+
+        loadAllNews();
+    </script>
+</body>
+
+</html>
