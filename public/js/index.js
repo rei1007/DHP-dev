@@ -311,21 +311,42 @@ window.openResModal = (t) => {
     castArea.innerHTML = castHtml;
 
     // Buttons
+    // Check if container exists or create it
+    let actionContainer = document.querySelector('.res-actions');
+    if (!actionContainer) {
+        // Find existing buttons if any and wrap them or replace logic
+        // Previous logic targeted IDs: resArchiveBtn, resLink
+        // Let's repurpose them or re-render
+        // To be safe, let's look for a container 'res-actions' in HTML.
+        // It might not exist if I didn't add it to HTML.
+        // I should inject the buttons into a container in the modal.
+        // The modal structure in HTML is: .res-header, .res-img-box, (members?), (cast?), (buttons?)
+        // Let's append to .res-modal-content if not found.
+    }
+    
+    // Easier: update the existing elements (Assuming they are <a id="..">) to have classes.
     const archiveBtn = document.getElementById('resArchiveBtn');
-    if (t.archiveUrl) {
-        archiveBtn.href = t.archiveUrl;
-        archiveBtn.style.display = 'block';
-    } else {
-        archiveBtn.style.display = 'none';
+    if (archiveBtn) {
+        archiveBtn.className = 'btn-res-rich btn-res-archive';
+        if (t.archiveUrl) {
+            archiveBtn.href = t.archiveUrl;
+            archiveBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg> 配信アーカイブを見る';
+            archiveBtn.style.display = 'flex';
+        } else {
+            archiveBtn.style.display = 'none';
+        }
     }
 
     const linkBtn = document.getElementById('resLink');
-    if (w.url) {
-        linkBtn.href = w.url;
-        linkBtn.innerText = '優勝ポストを見る';
-        linkBtn.style.display = 'block';
-    } else {
-        linkBtn.style.display = 'none';
+    if (linkBtn) {
+        linkBtn.className = 'btn-res-rich btn-res-post';
+        if (w.url) {
+            linkBtn.href = w.url;
+            linkBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> 優勝ポストを見る';
+            linkBtn.style.display = 'flex';
+        } else {
+            linkBtn.style.display = 'none';
+        }
     }
 
     modal.classList.add('active');

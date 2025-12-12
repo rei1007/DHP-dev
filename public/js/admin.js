@@ -194,7 +194,7 @@ window.editItem = (id) => {
     document.getElementById('editId').value = t.id;
     document.getElementById('modalTitle').textContent = '大会情報の編集';
 
-    document.getElementById('inpName').value = t.name || '';
+    document.getElementById('inpTourName').value = t.name || '';
     document.getElementById('inpStatus').value = t.status || 'upcoming';
     document.getElementById('inpEventDate').value = t.eventDate || '';
     document.getElementById('inpEntryStart').value = t.entryStart || '';
@@ -205,6 +205,8 @@ window.editItem = (id) => {
     // XP
     if (t.xpLimit === 'none' || !t.xpLimit) {
         chkXpNone.checked = true;
+        // xpInputs might need to target the new container style if changed, but ID is same?
+        // In previous step HTML, id="xpInputs". So it is fine.
         xpInputs.style.opacity = '0.5'; xpInputs.style.pointerEvents = 'none';
         document.getElementById('inpXpAvg').value = '';
         document.getElementById('inpXpMax').value = '';
@@ -244,22 +246,19 @@ window.editItem = (id) => {
     document.getElementById('inpComX').value = t.commentator?.x || '';
     document.getElementById('inpComYt').value = t.commentator?.yt || '';
 
-    document.getElementById('inpOpName').value = t.operator || '';
+    document.getElementById('inpOperator').value = t.operator || '';
     document.getElementById('inpLicense').value = t.license || '';
     document.getElementById('inpArchiveUrl').value = t.archiveUrl || '';
 
     // Winner
-    document.getElementById('inpWinTeamName').value = t.winner?.teamName || '';
+    document.getElementById('inpWinTeam').value = t.winner?.teamName || '';
     document.getElementById('inpWinUniv').value = t.winner?.univ || '';
     document.getElementById('inpWinCircle').value = t.winner?.circle || '';
     document.getElementById('inpWinImage').value = t.winner?.image || '';
     document.getElementById('inpWinUrl').value = t.winner?.url || '';
 
     const mems = t.winner?.members || [];
-    document.getElementById('inpWinMem1').value = mems[0] || '';
-    document.getElementById('inpWinMem2').value = mems[1] || '';
-    document.getElementById('inpWinMem3').value = mems[2] || '';
-    document.getElementById('inpWinMem4').value = mems[3] || '';
+    document.getElementById('inpWinMembers').value = mems.join(', ');
 
     modal.style.display = 'flex';
 };
@@ -290,15 +289,12 @@ editForm.addEventListener('submit', async (e) => {
             max: parseInt(document.getElementById('inpXpMax').value) || 0
         };
 
-        const winMems = [
-            document.getElementById('inpWinMem1').value,
-            document.getElementById('inpWinMem2').value,
-            document.getElementById('inpWinMem3').value,
-            document.getElementById('inpWinMem4').value,
-        ].filter(x => x.trim() !== '');
+        // Winner Members: Split by comma
+        const winMemsStr = document.getElementById('inpWinMembers').value || '';
+        const winMems = winMemsStr.split(',').map(s => s.trim()).filter(s => s !== '');
 
         const data = {
-            name: document.getElementById('inpName').value,
+            name: document.getElementById('inpTourName').value,
             status: document.getElementById('inpStatus').value,
             eventDate: document.getElementById('inpEventDate').value,
             entryStart: document.getElementById('inpEntryStart').value,
@@ -320,11 +316,11 @@ editForm.addEventListener('submit', async (e) => {
                 x: document.getElementById('inpComX').value,
                 yt: document.getElementById('inpComYt').value
             },
-            operator: document.getElementById('inpOpName').value,
+            operator: document.getElementById('inpOperator').value,
             license: document.getElementById('inpLicense').value,
             archiveUrl: document.getElementById('inpArchiveUrl').value,
             winner: {
-                teamName: document.getElementById('inpWinTeamName').value,
+                teamName: document.getElementById('inpWinTeam').value,
                 univ: document.getElementById('inpWinUniv').value,
                 circle: document.getElementById('inpWinCircle').value,
                 image: document.getElementById('inpWinImage').value,

@@ -26,9 +26,9 @@ export function parseMarkdown(text) {
     let html = text
         .replace(/^# (.*$)/gm, '<h2>$1</h2>')
         .replace(/^## (.*$)/gm, '<h3>$1</h3>')
-        .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
-        .replace(/__(.*)__/gim, '<u>$1</u>')
-        .replace(/~~(.*)~~/gim, '<s>$1</s>')
+        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+        .replace(/__(.*?)__/gim, '<u>$1</u>')
+        .replace(/~~(.*?)~~/gim, '<s>$1</s>')
         // Link: [text](time) -> Allow tags in text part. Non-greedy match for text `(.*?)`
         .replace(/\[(.*?)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
         .replace(/^- (.*$)/gm, '<li>$1</li>')

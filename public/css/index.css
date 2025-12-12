@@ -840,19 +840,40 @@
     box-shadow: 0 4px 6px rgba(229, 62, 62, 0.3);
 }
 
-.btn-res-archive:hover {
-    background: #c53030;
+/* Rich Result Buttons */
+.res-actions {
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.btn-res-rich {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: 700;
+    transition: 0.2s;
+    text-decoration: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.btn-res-rich:hover {
     transform: translateY(-2px);
+    box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.15);
 }
 
-/* Post Button (Sub) */
+.btn-res-archive {
+    background: #c53030;
+    color: white;
+}
+
 .btn-res-post {
-    background: white;
-    border: 1px solid #cbd5e0;
-    color: #4a5568;
-}
-
-.btn-res-post:hover {
-    background: #f7fafc;
-    border-color: #a0aec0;
+    background: #000;
+    color: white;
+    border: none;
+    /* Override previous */
 }
