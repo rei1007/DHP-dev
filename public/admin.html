@@ -574,7 +574,7 @@
             loader.style.display = 'grid';
             tList.innerHTML = '';
             try {
-                // Fetch all, then sort in memory
+                // Fetch all
                 const q = query(colRef);
                 const snapshot = await getDocs(q);
                 tournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -591,6 +591,10 @@
                     return dB - dA;
                 });
 
+                if (tournaments.length === 0) {
+                    tList.innerHTML = '<div style="padding:20px; text-align:center;">大会が見つかりません</div>';
+                }
+
                 tournaments.forEach(t => {
                     const div = document.createElement('div');
                     div.className = 't-item';
@@ -602,7 +606,7 @@
                     else { statusLabel = '終了'; }
 
                     const dateStr = t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-';
-                    const rulesStr = t.rules ? t.rules.join(' / ') : '-';
+                    const rulesStr = (t.rules && Array.isArray(t.rules)) ? t.rules.join(' / ') : '-';
 
                     div.innerHTML = `
                         <div class="t-info">
@@ -618,7 +622,7 @@
                 });
             } catch (error) {
                 console.error(error);
-                tList.innerHTML = `<div style="color:red; p-4">エラーが発生しました: ${error.message}</div>`;
+                tList.innerHTML = `<div style="color:red; padding:20px;">エラーが発生しました: ${error.message}</div>`;
             } finally {
                 loader.style.display = 'none';
             }

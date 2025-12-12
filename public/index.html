@@ -1235,6 +1235,7 @@
             if (!tourGrid) return;
 
             try {
+                // Client-side sort
                 const q = query(collection(db, "tournaments"));
                 const snapshot = await getDocs(q);
 
@@ -1242,6 +1243,7 @@
 
                 tournamentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
+                // Global Sort for consistency (Status -> Date Desc)
                 const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
                 tournamentsData.sort((a, b) => {
                     const sA = statusOrder[a.status] || 99;
