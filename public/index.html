@@ -794,6 +794,24 @@
             cursor: pointer;
         }
 
+        .mob-dash-btn {
+            display: none;
+            margin-left: auto;
+            margin-right: 15px;
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 4px;
+            background: var(--c-primary);
+            color: white;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .mob-dash-btn {
+                display: inline-block;
+            }
+        }
+
         .res-img-box {
             width: 100%;
             aspect-ratio: 16/9;
@@ -861,15 +879,18 @@
         <div class="container header-inner">
             <a href="/" class="brand">
                 <img src="icon/大学杯ロゴ.png" alt="大学杯">
-                <!-- 文字削除: ロゴ画像のみ -->
             </a>
             <nav class="nav-desk">
                 <a href="#latest" class="nav-link">直近の大会</a>
                 <a href="#schedule" class="nav-link">年間スケジュール</a>
+                <a href="news.html" class="nav-link">お知らせ</a>
                 <a href="#sns" class="nav-link">SNS</a>
-                <a href="dashboard" class="btn-dash-nav">ダッシュボード</a>
-                <!-- dashboard is likely a route not file in future, but for now let's keep it or make it admin.HTML? The user said "link to admin dashboard in footer". Header link was "dashboard". Let's point both to admin.html for now or keep header as /dashboard if it's app logic. Wait, user said "link is in footer". Header button says "Dashboard". -->
+                <a href="admin.html" class="btn-dash-nav">ダッシュボード</a>
             </nav>
+
+            <!-- Mobile Dashboard Button -->
+            <a href="admin.html" class="mob-dash-btn">ダッシュボード</a>
+
             <div class="ham-btn" id="hamBtn"><span></span><span></span><span></span></div>
         </div>
     </header>
@@ -879,8 +900,8 @@
         style="position:fixed; inset:0; background:white; z-index:999; display:none; flex-direction:column; justify-content:center; align-items:center; gap:2rem;">
         <a href="#latest" class="nav-link" style="font-size:1.2rem;">直近の大会</a>
         <a href="#schedule" class="nav-link" style="font-size:1.2rem;">年間スケジュール</a>
+        <a href="news.html" class="nav-link" style="font-size:1.2rem;">お知らせ</a>
         <a href="#sns" class="nav-link" style="font-size:1.2rem;">SNS</a>
-        <a href="admin.html" class="btn-dash-nav">ダッシュボード</a>
         <button id="closeMob" style="background:none; border:none; color:#2d3748; font-size:2rem;">&times;</button>
     </div>
 
@@ -1082,7 +1103,7 @@
             <a id="resLink" href="#" target="_blank" class="btn-cta"
                 style="width:100%; text-align:center; display:block; background:var(--c-primary);">結果の詳細を見る (X)</a>
             <a id="resArchiveBtn" href="#" target="_blank" class="btn-dash-nav"
-                style="width:100%; text-align:center; display:none; margin-top:10px; background:#ff0000; color:white; border:none;">アーカイブ動画を見る</a>
+                style="width:100%; text-align:center; display:none; margin-top:10px; background:#edf2f7; color:#718096; border:none;">アーカイブ動画を見る</a>
         </div>
     </div>
 
@@ -1194,12 +1215,16 @@
                     // Cast Info (List)
                     let castInfo = '';
                     const casterName = (t.caster && t.caster.name) ? t.caster.name : '未定';
-                    const casterIcon = (t.caster && t.caster.icon) ? `<img src="${t.caster.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
-                    castInfo += `<div style="font-size:0.85rem; margin-top:4px; color:#4a5568;">🎙️ 実況: ${casterIcon}${casterName}</div>`;
+                    // No icon if missing
+                    const castIcon = (t.caster && t.caster.icon) ? `<img src="${t.caster.icon}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;">` : '';
+                    const comIcon = (t.commentator && t.commentator.icon) ? `<img src="${t.commentator.icon}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;">` : '';
 
-                    const comName = (t.commentator && t.commentator.name) ? t.commentator.name : '未定';
-                    const comIcon = (t.commentator && t.commentator.icon) ? `<img src="${t.commentator.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
-                    castInfo += `<div style="font-size:0.85rem; margin-top:2px; color:#4a5568;">📝 解説: ${comIcon}${comName}</div>`;
+                    castInfo += `<div style="font-size:0.85rem; margin-top:4px; color:#4a5568; display:flex; align-items:center;">
+                        <span style="font-weight:bold; margin-right:5px;">実況:</span> ${castIcon}${casterName}
+                    </div>`;
+                    castInfo += `<div style="font-size:0.85rem; margin-top:2px; color:#4a5568; display:flex; align-items:center;">
+                         <span style="font-weight:bold; margin-right:5px;">解説:</span> ${comIcon}${comName}
+                    </div>`;
 
                     // Action
                     let actionHtml = '';

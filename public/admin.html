@@ -928,6 +928,207 @@
             }
             loader.style.display = 'none';
         });
+
+        // --- Tab Logic ---
+        window.switchTab = (tab) => {
+            const btnTour = document.getElementById('tabBtnTour');
+            const btnNews = document.getElementById('tabBtnNews');
+            const pTour = document.getElementById('panelTour');
+            const pNews = document.getElementById('panelNews');
+
+            if (tab === 'tour') {
+                btnTour.style.background = '#2d3748'; btnTour.style.color = '#fff'; btnTour.style.border = 'none';
+                btnNews.style.background = 'transparent'; btnNews.style.color = '#4a5568'; btnNews.style.border = '1px solid #cbd5e0';
+                pTour.style.display = 'block'; pNews.style.display = 'none';
+            } else {
+                btnNews.style.background = '#2d3748'; btnNews.style.color = '#fff'; btnNews.style.border = 'none';
+                btnTour.style.background = 'transparent'; btnTour.style.color = '#4a5568'; btnTour.style.border = '1px solid #cbd5e0';
+                pNews.style.display = 'block'; pTour.style.display = 'none';
+                loadNews(); // Load on switch
+            }
+        };
+
+        // --- News Logic ---
+        let newsList = [];
+        const nList = document.getElementById('nList');
+        const newsModal = document.getElementById('newsModal');
+        const newsForm = document.getElementById('newsForm');
+
+        window.loadNews = async () => {
+            nList.innerHTML = '<div style="padding:20px; text-align:center;">Loading News...</div>';
+            try {
+                const q = query(collection(db, "news"), orderBy("date", "desc"));
+                const snapshot = await getDocs(q);
+                newsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                nList.innerHTML = '';
+                if (newsList.length === 0) {
+                    nList.innerHTML = '<div style="padding:20px; text-align:center;">お知らせがありません</div>';
+                    return;
+                }
+
+                newsList.forEach(n => {
+                    const div = document.createElement('div');
+                    div.className = 't-item'; // Reuse styles
+                    const badge = n.type === 'tournament'
+                        ? '<span class="status-badge status-upcoming">大会情報</span>'
+                        : `<span class="status-badge" style="background:#e2e8f0; color:#4a5568;">${n.badge || 'News'}</span>`;
+
+                    div.innerHTML = `
+                        <div class="t-info">
+                            <h3>${badge} ${n.title}</h3>
+                            <div class="t-status">公開日: ${n.date}</div>
+                        </div>
+                        <div class="t-actions">
+                            <button class="btn btn-sm" onclick="window.editNews('${n.id}')">編集</button>
+                            <button class="btn btn-sm btn-red" onclick="window.deleteNews('${n.id}')">削除</button>
+                        </div>
+                    `;
+                    nList.appendChild(div);
+                });
+            } catch (e) {
+                console.error(e);
+                nList.innerHTML = 'Error loading news.';
+            }
+        };
+
+        window.toggleNewsType = () => {
+            const type = document.querySelector('input[name="newsType"]:checked').value;
+            if (type === 'tournament') {
+                document.getElementById('newsTypeTour').style.display = 'block';
+                document.getElementById('newsTypeNormal').style.display = 'none';
+
+                // Populate Tournament Dropdown
+                const sel = document.getElementById('inpNewsTourId');
+                sel.innerHTML = '<option value="">大会を選択してください</option>';
+                tournaments.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = t.id;
+                    opt.textContent = t.name + (t.status === 'open' ? ' (受付中)' : '');
+                    sel.appendChild(opt);
+                });
+
+            } else {
+                document.getElementById('newsTypeTour').style.display = 'none';
+                document.getElementById('newsTypeNormal').style.display = 'block';
+            }
+        };
+
+        window.generateDraft = () => {
+            const tid = document.getElementById('inpNewsTourId').value;
+            if (!tid) return alert('大会を選択してください');
+
+            const t = tournaments.find(x => x.id === tid);
+            if (!t) return;
+
+            let title = '';
+            let body = '';
+
+            // Simple Logic for draft
+            if (t.status === 'open') {
+                title = `【エントリー開始】${t.name}`;
+                body = `**${t.name}** のエントリー受付を開始しました！\n\n- 開催日: ${t.eventDate || '未定'}\n- エントリー期間: ～${t.entryEnd ? new Date(t.entryEnd).toLocaleDateString() : '未定'}\n\n皆様の参加をお待ちしています。`;
+            } else if (t.winner) {
+                title = `【結果発表】${t.name}`;
+                body = `**${t.name}** が終了しました。\n\n**優勝: ${t.winner.team || '不明'}**\nおめでとうございます！\n\n詳細は大会結果ページをご覧ください。`;
+            } else {
+                title = `【お知らせ】${t.name}`;
+                body = `**${t.name}** についてのお知らせです。\n\n詳細は続報をお待ちください。`;
+            }
+
+            document.getElementById('inpNewsTitle').value = title;
+            document.getElementById('inpNewsBody').value = body;
+        };
+
+        window.editNews = (id) => {
+            const n = newsList.find(x => x.id === id);
+            if (!n) return;
+
+            document.getElementById('newsId').value = n.id;
+            document.getElementById('newsModalTitle').textContent = 'お知らせ編集';
+
+            document.querySelector(`input[name="newsType"][value="${n.type}"]`).checked = true;
+            toggleNewsType();
+
+            if (n.type === 'tournament') {
+                document.getElementById('inpNewsTourId').value = n.refTourId || '';
+            } else {
+                document.getElementById('inpNewsBadge').value = n.badge || 'info';
+            }
+
+            document.getElementById('inpNewsTitle').value = n.title;
+            document.getElementById('inpNewsDate').value = n.date;
+            document.getElementById('inpNewsBody').value = n.body;
+
+            newsModal.style.display = 'flex';
+        };
+
+        window.deleteNews = async (id) => {
+            if (!confirm('削除しますか？')) return;
+            loader.style.display = 'grid';
+            try {
+                await deleteDoc(doc(db, "news", id));
+                await loadNews();
+            } catch (e) { alert(e.message); }
+            loader.style.display = 'none';
+        };
+
+        // News Events
+        document.getElementById('btnNewNews').addEventListener('click', () => {
+            document.getElementById('newsId').value = '';
+            newsForm.reset();
+            document.querySelector('input[name="newsType"][value="normal"]').checked = true;
+            toggleNewsType();
+            document.getElementById('inpNewsDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('newsModalTitle').textContent = '新規お知らせ作成';
+            newsModal.style.display = 'flex';
+        });
+
+        document.getElementById('btnCloseNewsModal').addEventListener('click', () => newsModal.style.display = 'none');
+
+        newsForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loader.style.display = 'grid';
+
+            const id = document.getElementById('newsId').value;
+            const type = document.querySelector('input[name="newsType"]:checked').value;
+            const title = document.getElementById('inpNewsTitle').value;
+            const dateStr = document.getElementById('inpNewsDate').value;
+            const body = document.getElementById('inpNewsBody').value;
+
+            const data = {
+                type,
+                title,
+                date: dateStr,
+                body,
+                updatedAt: new Date().toISOString()
+            };
+
+            if (type === 'tournament') {
+                data.refTourId = document.getElementById('inpNewsTourId').value;
+                data.badge = 'tournament'; // Fixed badge
+            } else {
+                data.badge = document.getElementById('inpNewsBadge').value;
+                data.refTourId = null;
+            }
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, "news", id), data);
+                } else {
+                    await addDoc(collection(db, "news"), data);
+                }
+                newsModal.style.display = 'none';
+                await loadNews();
+            } catch (error) {
+                alert('保存失敗: ' + error.message);
+            }
+            loader.style.display = 'none';
+        });
+
+        // Initialize Tab
+        document.getElementById('tabBtnTour').style.background = '#2d3748';
+        document.getElementById('tabBtnTour').style.color = '#fff';
     </script>
 </body>
 
