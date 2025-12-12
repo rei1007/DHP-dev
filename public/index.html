@@ -1217,6 +1217,8 @@
                     const casterName = (t.caster && t.caster.name) ? t.caster.name : '未定';
                     // No icon if missing
                     const castIcon = (t.caster && t.caster.icon) ? `<img src="${t.caster.icon}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;">` : '';
+
+                    const comName = (t.commentator && t.commentator.name) ? t.commentator.name : '未定';
                     const comIcon = (t.commentator && t.commentator.icon) ? `<img src="${t.commentator.icon}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:5px;">` : '';
 
                     castInfo += `<div style="font-size:0.85rem; margin-top:4px; color:#4a5568; display:flex; align-items:center;">

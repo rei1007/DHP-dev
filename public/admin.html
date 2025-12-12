@@ -615,11 +615,15 @@
                 xpInputs.style.pointerEvents = 'none';
                 document.getElementById('inpXpAvg').value = '';
                 document.getElementById('inpXpMax').value = '';
-            } else {
                 xpInputs.style.opacity = '1';
                 xpInputs.style.pointerEvents = 'auto';
             }
         });
+
+        // Global State & UI Elements (Declared early to avoid TDZ)
+        let tournaments = [];
+        const tList = document.getElementById('tList');
+        const loader = document.getElementById('loader');
 
         // Status Calculation
         window.calcStatus = (force = false) => {
@@ -697,9 +701,7 @@
         }
 
         // Data Logic
-        let tournaments = [];
-        const tList = document.getElementById('tList');
-        const loader = document.getElementById('loader');
+        // tournaments, tList, loader are declared at the top
 
         async function loadData() {
             loader.style.display = 'grid';
@@ -1028,8 +1030,8 @@
             const t = tournaments.find(x => x.id === tid);
             if (!t) return;
 
-            // Simplified Template: "大会告知のみ"
-            const title = `【大会告知】${t.name}の開催について`;
+            // Updated Template: No prefix, include details
+            const title = `${t.name}の開催について`;
 
             // Format Dates
             const eventDate = t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '未定';
@@ -1038,7 +1040,26 @@
                 entryPeriod = `${new Date(t.entryStart).toLocaleDateString()} ～ ${new Date(t.entryEnd).toLocaleDateString()}`;
             }
 
-            const body = `**${t.name}** の開催が決定いたしました！\n\n皆様の多くのご参加をお待ちしております。\n\n- **開催日**: ${eventDate}\n- **エントリー期間**: ${entryPeriod}\n- **ルール**: ${t.rules ? t.rules.join(', ') : '未定'}\n\n[大会詳細ページはこちら](entry.html)`;
+            // XP Limit from t.xpLimit (object) or t.xpLimit (string) check? 
+            // loadData/editItem logic suggests structure: t.xpLimit might be 'none' string or object {avg, max}??
+            // Wait, in editItem (Step 763): if(t.xpLimit === 'none')... else { t.xpLimit.avg ... }
+            let xpText = '制限なし';
+            if (t.xpLimit && t.xpLimit !== 'none') {
+                const avg = t.xpLimit.avg || '-';
+                const max = t.xpLimit.max || '-';
+                xpText = `チーム平均XP${avg}以下 / 最高XP${max}以下`;
+            } else if (typeof t.xpLimit === 'object' && t.xpLimit) {
+                // Fallback if 'none' wasn't string but empty object?
+                const avg = t.xpLimit.avg;
+                const max = t.xpLimit.max;
+                if (avg || max) xpText = `チーム平均XP${avg || '-'}以下 / 最高XP${max || '-'}以下`;
+            }
+
+            // Cast
+            const caster = (t.caster && t.caster.name) ? t.caster.name : '未定';
+            const commentator = (t.commentator && t.commentator.name) ? t.commentator.name : '未定';
+
+            const body = `**${t.name}** の開催が決定いたしました！\n\n皆様の多くのご参加をお待ちしております。\n\n- **開催日**: ${eventDate}\n- **エントリー期間**: ${entryPeriod}\n- **ルール**: ${t.rules ? t.rules.join(', ') : '未定'}\n- **XP制限**: ${xpText}\n- **実況**: ${caster}\n- **解説**: ${commentator}`;
 
             document.getElementById('inpNewsTitle').value = title;
             document.getElementById('inpNewsBody').value = body;
