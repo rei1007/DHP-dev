@@ -5,8 +5,7 @@ export async function onRequestPost(context) {
     const { password } = await request.json();
 
     // Cloudflare Pagesの環境変数 ADMIN_PASSWORD と比較
-    // 環境変数が設定されていない場合のフォールバック（開発用）も考慮
-    const correctPassword = env.ADMIN_PASSWORD || "admin1234";
+    const correctPassword = env.ADMIN_PASSWORD;
 
     if (password === correctPassword) {
       return new Response(JSON.stringify({ success: true }), {
