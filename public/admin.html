@@ -144,40 +144,58 @@
                             <label class="checkbox-label" style="margin-bottom:10px;">
                                 <input type="checkbox" id="chkXpNone"> 制限なし
                             </label>
-                            <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
+                            <div id="xpInputs" style="display:flex; gap:10px;">
+                                <div style="flex:1;">
+                                    <label>平均上限</label>
+                                    <input type="number" id="inpXpAvg" placeholder="2200">
+                                </div>
+                                <div style="flex:1;">
+                                    <label>最高上限</label>
+                                    <input type="number" id="inpXpMax" placeholder="2400">
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="section-label">キャスト・配信</div>
+
+                        <!-- Caster -->
+                        <div
+                            style="background:#f7fafc; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;">
+                            <label style="font-weight:bold; color:#4a5568;">実況 (Caster)</label>
+                            <input type="text" id="inpCasterName" placeholder="名前">
+                            <input type="url" id="inpCasterIcon" placeholder="アイコンURL">
+                            <div style="display:flex; gap:5px;">
+                                <input type="text" id="inpCasterX" placeholder="X ID (@...)" style="flex:1;">
+                                <input type="url" id="inpCasterYt" placeholder="YouTube Ch" style="flex:1;">
+                            </div>
+                        </div>
+
+                        <!-- Commentator -->
+                        <div
+                            style="background:#f7fafc; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;">
+                            <label style="font-weight:bold; color:#4a5568;">解説 (Commentator)</label>
+                            <input type="text" id="inpComName" placeholder="名前">
+                            <input type="url" id="inpComIcon" placeholder="アイコンURL">
+                            <div style="display:flex; gap:5px;">
+                                <input type="text" id="inpComX" placeholder="X ID (@...)" style="flex:1;">
+                                <input type="url" id="inpComYt" placeholder="YouTube Ch" style="flex:1;">
+                            </div>
+                        </div>
+
+                        <label>運営・配信担当</label>
+                        <input type="text" id="inpOperator" placeholder="団体名/担当者">
+
+                        <label>任天堂許諾番号</label>
+                        <input type="text" id="inpLicense" placeholder="NJ...">
                     </div>
-
-                    <!-- 優勝チーム情報 -->
                 </div>
-        </div>
 
-        <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">優勝チーム情報（終了後入力）</h4>
-        <div style="margin-bottom:15px;">
-            <label style="font-size:0.9rem;">優勝画像URL (16:9)</label>
-            <input type="url" id="inpWinImage" placeholder="https://example.com/image.jpg">
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
+                    <button type="submit" class="btn btn-green" style="width:auto;">保存する</button>
+                </div>
+            </form>
         </div>
-        <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
-            <input type="text" id="inpWinTeamName" placeholder="チーム名" style="margin-bottom:0;">
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                <input type="text" id="inpWinUniv" placeholder="大学名" style="margin-bottom:0;">
-                <input type="text" id="inpWinCircle" placeholder="サークル名" style="margin-bottom:0;">
-            </div>
-        </div>
-        <label style="font-size:0.9rem;">優勝メンバー (4名)</label>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-            <input type="text" id="inpWinMem1" placeholder="メンバー1" style="margin-bottom:0;">
-            <input type="text" id="inpWinMem2" placeholder="メンバー2" style="margin-bottom:0;">
-            <input type="text" id="inpWinMem3" placeholder="メンバー3" style="margin-bottom:0;">
-            <input type="text" id="inpWinMem4" placeholder="メンバー4" style="margin-bottom:0;">
-        </div>
-        <input type="url" id="inpWinUrl" placeholder="結果詳細URL (Xのポスト等)">
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-            <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
-            <button type="submit" class="btn btn-green" style="width:auto;">保存する</button>
-        </div>
-        </form>
-    </div>
     </div>
 
     <!-- NEWS MODAL -->
