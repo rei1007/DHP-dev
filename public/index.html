@@ -701,9 +701,14 @@
     <style>
         /* Date Emphasis */
         .tour-date-stress {
-            font-weight: 700;
+            font-weight: 800;
             color: var(--c-primary);
-            font-size: 1.1rem;
+            font-size: 1.25rem;
+            background: #bee3f8;
+            /* 薄い青背景 */
+            padding: 2px 8px;
+            border-radius: 4px;
+            display: inline-block;
         }
 
         .tour-entry-stress {
@@ -1431,16 +1436,31 @@
         // CTA Visibility
         const ctaBar = document.getElementById('ctaBar');
         const footer = document.getElementById('footer');
+        const hero = document.querySelector('.hero') || document.querySelector('.hero-container') || document.body.firstElementChild; // .heroがない場合のフォールバック
+
+        let isHeroVisible = true;
+        let isFooterVisible = false;
+
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    ctaBar.classList.add('hidden');
-                } else {
-                    ctaBar.classList.remove('hidden');
+                if (entry.target === hero) {
+                    isHeroVisible = entry.isIntersecting;
+                }
+                if (entry.target === footer) {
+                    isFooterVisible = entry.isIntersecting;
                 }
             });
+
+            // HeroまたはFooterが見えているときは隠す
+            if (isHeroVisible || isFooterVisible) {
+                ctaBar.classList.add('hidden');
+            } else {
+                ctaBar.classList.remove('hidden');
+            }
         }, { threshold: 0.1 });
-        observer.observe(footer);
+
+        if (footer) observer.observe(footer);
+        if (hero) observer.observe(hero);
     </script>
 </body>
 

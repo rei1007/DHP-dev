@@ -618,9 +618,10 @@
                 });
             } catch (error) {
                 console.error(error);
-                // エラーが出てもUIは表示する
+                tList.innerHTML = `<div style="color:red; p-4">エラーが発生しました: ${error.message}</div>`;
+            } finally {
+                loader.style.display = 'none';
             }
-            loader.style.display = 'none';
         }
 
         const modal = document.getElementById('editModal');
