@@ -743,15 +743,30 @@
 }
 
 .res-team-name {
-    font-size: 1.8rem;
-    font-weight: 800;
+    font-size: 2.5rem;
+    /* Increased from 1.8rem */
+    font-weight: 900;
     color: var(--c-primary);
-    line-height: 1.2;
+    line-height: 1.1;
+    margin: 10px 0;
+    background: linear-gradient(45deg, var(--c-primary), #2b6cb0);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.1));
+}
+
+@media (max-width: 600px) {
+    .res-team-name {
+        font-size: 2rem;
+    }
 }
 
 .res-univ {
-    font-size: 0.95rem;
-    color: #718096;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #4a5568;
     margin-top: 5px;
 }
 
@@ -760,16 +775,23 @@
     flex-wrap: wrap;
     gap: 8px;
     justify-content: center;
-    margin-top: 15px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    /* Space between members and casters */
 }
 
 .res-mem-pill {
-    background: #edf2f7;
-    padding: 6px 14px;
-    border-radius: 99px;
-    font-size: 0.85rem;
-    color: #2d3748;
-    font-weight: 500;
+    background: white;
+    border: 2px solid #e2e8f0;
+    padding: 8px 18px;
+    /* Increased padding */
+    border-radius: 12px;
+    /* Smoother radius */
+    font-size: 1rem;
+    /* Increased size */
+    color: var(--c-primary);
+    font-weight: 700;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
 .res-cast-area {

@@ -145,8 +145,36 @@ window.openResModal = (t) => {
     }
 
     document.getElementById('resTeam').textContent = w.teamName || 'Team Name';
-    document.getElementById('resUniv').textContent = w.univ || '-';
-    document.getElementById('resCircle').textContent = w.circle || '-';
+    
+    // Handle Cross-Circle Display
+    const univBox = modal.querySelector('.res-univ-info');
+    if (univBox) {
+        // Use Regex split for safety against spacing differences
+        const univs = (w.univ || '').split(/\s*\/\s*/).filter(s => s);
+        const circles = (w.circle || '').split(/\s*\/\s*/).filter(s => s);
+        
+        if (univs.length > 1 || circles.length > 1) {
+            // Multiple (Cross)
+            let html = '';
+            const max = Math.max(univs.length, circles.length);
+            for(let i=0; i<max; i++) {
+                const u = univs[i] || '';
+                const c = circles[i] || '';
+                // Add separator styling
+                html += `<div style="margin-top:6px; font-size:1.1rem; color:#2d3748;">
+                            <span>${u}</span>
+                            <span style="opacity:0.4; margin:0 8px; font-weight:300;">|</span> 
+                            <span>${c}</span>
+                         </div>`;
+            }
+            univBox.innerHTML = html;
+        } else {
+            // Single
+            univBox.innerHTML = `<span style="font-size:1.2rem; margin-right:5px;">${w.univ || '-'}</span> 
+                                 <span style="opacity:0.4; font-weight:300;">|</span> 
+                                 <span style="font-size:1.2rem; margin-left:5px;">${w.circle || '-'}</span>`;
+        }
+    }
 
     // Members
     const memArea = document.getElementById('resMembers');
