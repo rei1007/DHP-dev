@@ -402,6 +402,10 @@
                 <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
 
                 <h4>優勝チーム情報（終了後入力）</h4>
+                <div style="margin-bottom:15px;">
+                    <label style="font-size:0.9rem;">優勝画像URL (16:9)</label>
+                    <input type="url" id="inpWinImage" placeholder="https://example.com/image.jpg">
+                </div>
                 <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                     <input type="text" id="inpWinTeamName" placeholder="チーム名" style="margin-bottom:0;">
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
@@ -409,7 +413,14 @@
                         <input type="text" id="inpWinCircle" placeholder="サークル名" style="margin-bottom:0;">
                     </div>
                 </div>
-                <input type="url" id="inpWinUrl" placeholder="結果ツイートURL等">
+                <label style="font-size:0.9rem;">優勝メンバー (4名)</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <input type="text" id="inpWinMem1" placeholder="メンバー1" style="margin-bottom:0;">
+                    <input type="text" id="inpWinMem2" placeholder="メンバー2" style="margin-bottom:0;">
+                    <input type="text" id="inpWinMem3" placeholder="メンバー3" style="margin-bottom:0;">
+                    <input type="text" id="inpWinMem4" placeholder="メンバー4" style="margin-bottom:0;">
+                </div>
+                <input type="url" id="inpWinUrl" placeholder="結果詳細URL (Xのポスト等)">
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
                     <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
@@ -563,9 +574,22 @@
             loader.style.display = 'grid';
             tList.innerHTML = '';
             try {
-                const q = query(colRef, orderBy("eventDate", "desc"));
+                // Fetch all, then sort in memory
+                const q = query(colRef);
                 const snapshot = await getDocs(q);
                 tournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                // Sort: Open -> Upcoming -> Closed, then by date desc
+                const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
+
+                tournaments.sort((a, b) => {
+                    const sA = statusOrder[a.status] || 99;
+                    const sB = statusOrder[b.status] || 99;
+                    if (sA !== sB) return sA - sB;
+                    const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+                    const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+                    return dB - dA;
+                });
 
                 tournaments.forEach(t => {
                     const div = document.createElement('div');
@@ -643,6 +667,12 @@
             document.getElementById('inpWinUniv').value = t.winner?.univ || '';
             document.getElementById('inpWinCircle').value = t.winner?.circle || '';
             document.getElementById('inpWinUrl').value = t.winner?.url || '';
+            document.getElementById('inpWinImage').value = t.winner?.image || '';
+            const members = t.winner?.members || [];
+            document.getElementById('inpWinMem1').value = members[0] || '';
+            document.getElementById('inpWinMem2').value = members[1] || '';
+            document.getElementById('inpWinMem3').value = members[2] || '';
+            document.getElementById('inpWinMem4').value = members[3] || '';
 
             modal.style.display = 'flex';
         };
@@ -706,9 +736,23 @@
             const wUniv = document.getElementById('inpWinUniv').value;
             const wCircle = document.getElementById('inpWinCircle').value;
             const wUrl = document.getElementById('inpWinUrl').value;
+            const wImage = document.getElementById('inpWinImage').value;
+            const wMems = [
+                document.getElementById('inpWinMem1').value,
+                document.getElementById('inpWinMem2').value,
+                document.getElementById('inpWinMem3').value,
+                document.getElementById('inpWinMem4').value
+            ].filter(m => m.trim() !== '');
 
-            if (wTeam || wUniv || wCircle || wUrl) {
-                data.winner = { team: wTeam, univ: wUniv, circle: wCircle, url: wUrl };
+            if (wTeam || wUniv || wUrl || wImage || wMems.length > 0) {
+                data.winner = {
+                    team: wTeam,
+                    univ: wUniv,
+                    circle: wCircle,
+                    url: wUrl,
+                    image: wImage,
+                    members: wMems
+                };
             } else {
                 data.winner = null;
             }

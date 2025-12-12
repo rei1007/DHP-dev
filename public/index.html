@@ -698,6 +698,155 @@
             /* Mobile Padding for overlap */
         }
     </style>
+    <style>
+        /* Date Emphasis */
+        .tour-date-stress {
+            font-weight: 700;
+            color: var(--c-primary);
+            font-size: 1.1rem;
+        }
+
+        .tour-entry-stress {
+            color: #e53e3e;
+            font-weight: 700;
+        }
+
+        /* News Mobile */
+        @media (max-width: 767px) {
+            .news-bridge {
+                top: auto;
+                bottom: 85px;
+                padding: 0 15px;
+            }
+
+            .news-card-hero {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+                padding: 12px 15px;
+            }
+
+            .news-card-hero .news-date {
+                font-size: 0.75rem;
+                color: #a0aec0;
+            }
+
+            .news-card-hero .news-title {
+                font-size: 0.9rem;
+                margin: 0;
+            }
+
+            .section {
+                padding: 50px 0;
+            }
+        }
+
+        /* Result Modal */
+        .res-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .res-modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .res-modal-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 12px;
+            padding: 25px;
+            position: relative;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: translateY(20px);
+            transition: transform 0.3s;
+        }
+
+        .res-modal-overlay.active .res-modal-content {
+            transform: translateY(0);
+        }
+
+        .res-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            color: #718096;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .res-img-box {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #edf2f7;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #a0aec0;
+        }
+
+        .res-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .res-team-name {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--c-primary);
+            margin-bottom: 5px;
+        }
+
+        .res-univ-info {
+            font-size: 0.9rem;
+            color: #718096;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .res-members {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .res-mem-item {
+            background: #f7fafc;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .res-mem-icon {
+            width: 20px;
+            height: 20px;
+            background: #cbd5e0;
+            border-radius: 50%;
+        }
+    </style>
 </head>
 
 <body>
@@ -878,7 +1027,8 @@
                     <div class="timeline-date">8月・夏</div>
                     <div class="timeline-content">
                         <h3>大学杯 夏の陣 <span class="tag tag-main">Main</span></h3>
-                        <p>最大規模の夏フェス。最大規模のガチエリア大会である「大学杯(無印)」、初級者向けナワバリバトル大会の「大学杯0(ヌル)」、そして出場制限なしの上級者向けガチエリア大会の「大学杯+(プラス)」、3大会開催。</p>
+                        <p>最大規模の夏フェス。最大規模のガチエリア大会である「大学杯(無印)」、初級者向けナワバリバトル大会の「大学杯0(ヌル)」、そして出場制限なしの上級者向けガチエリア大会の「大学杯+(プラス)」、3大会開催。
+                        </p>
                     </div>
                 </div>
                 <div class="timeline-item">
@@ -903,7 +1053,8 @@
                 style="text-align:center; margin-top:50px; padding:20px; border:1px dashed #cbd5e0; border-radius:8px;">
                 <h4 style="color:var(--c-primary); margin-bottom:5px;">その他の大会</h4>
                 <p style="font-size:0.9rem; color:var(--c-text-muted);">
-                    ナワバリバトルのガチ大会「大学杯θ(シータ)」やイカップル大会の「大学杯W」、サーモンラン大会の「大学鮭杯」なども不定期開催！今後も新しい大会を企画していきます！最新の大会情報はXアカウントをご確認ください。</p>
+                    ナワバリバトルのガチ大会「大学杯θ(シータ)」やイカップル大会の「大学杯W」、サーモンラン大会の「大学鮭杯」なども不定期開催！今後も新しい大会を企画していきます！最新の大会情報はXアカウントをご確認ください。
+                </p>
             </div>
         </div>
     </section>
@@ -1020,6 +1171,32 @@
         </div>
     </footer>
 
+    <!-- Result Modal -->
+    <div id="resModal" class="res-modal-overlay">
+        <div class="res-modal-content">
+            <button class="res-close" onclick="closeResModal()">×</button>
+            <div id="resImgArea" class="res-img-box">
+                <!-- Image or Placeholder -->
+                <span>No Image</span>
+            </div>
+            <div style="text-align:center;">
+                <span
+                    style="background:#FFD700; color:#333; padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold; letter-spacing:1px; margin-bottom:10px; display:inline-block;">WINNER</span>
+                <h3 id="resTeam" class="res-team-name">Team Name</h3>
+                <div class="res-univ-info">
+                    <span id="resUniv">University</span>
+                    <span style="opacity:0.5;">/</span>
+                    <span id="resCircle">Circle</span>
+                </div>
+            </div>
+            <div id="resMembers" class="res-members">
+                <!-- Members injected by JS -->
+            </div>
+            <a id="resLink" href="#" target="_blank" class="btn-cta"
+                style="width:100%; text-align:center; display:block; background:var(--c-primary);">結果の詳細を見る (X)</a>
+        </div>
+    </div>
+
     <!-- Floating CTA -->
     <div id="ctaBar" class="cta-bar">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -1046,22 +1223,32 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        let tournamentsData = [];
+
         async function loadTournaments() {
             const tourGrid = document.querySelector('.tour-grid');
             if (!tourGrid) return;
 
             try {
-                const q = query(collection(db, "tournaments"), orderBy("eventDate", "desc"), limit(4));
+                const q = query(collection(db, "tournaments"));
                 const snapshot = await getDocs(q);
 
-                if (snapshot.empty) {
-                    console.log("No tournaments found.");
-                    return; // データがなければデフォルト表示のまま
-                }
+                if (snapshot.empty) { return; }
+
+                tournamentsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
+                tournamentsData.sort((a, b) => {
+                    const sA = statusOrder[a.status] || 99;
+                    const sB = statusOrder[b.status] || 99;
+                    if (sA !== sB) return sA - sB;
+                    const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+                    const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+                    return dB - dA;
+                });
 
                 let html = '';
-                snapshot.forEach(doc => {
-                    const t = doc.data();
+                tournamentsData.slice(0, 6).forEach(t => {
                     let statusClass = 'status-closed';
                     let statusText = '終了';
                     let borderColor = 'var(--border)';
@@ -1141,29 +1328,28 @@
             }
         }
 
-        function updateCtaBar(snapshot) {
+        function updateCtaBar(data) {
             const ctaBar = document.getElementById('ctaBar');
             if (!ctaBar) return;
 
-            let openTour = null;
-            snapshot.forEach(doc => {
-                const t = doc.data();
-                if (t.status === 'open' && !openTour) {
-                    openTour = t;
-                }
-            });
+            // Find first Open tournament
+            const openTour = data.find(t => t.status === 'open');
 
             if (openTour) {
                 let periodStr = '';
                 if (openTour.entryEnd) {
                     const d = new Date(openTour.entryEnd);
-                    periodStr = `~${d.getMonth() + 1}/${d.getDate()}`;
+                    const m = d.getMonth() + 1;
+                    const day = d.getDate();
+                    const hours = ('0' + d.getHours()).slice(-2);
+                    const mins = ('0' + d.getMinutes()).slice(-2);
+                    periodStr = `~${m}/${day} <span style="font-size:0.85em">(${hours}:${mins})</span>`;
                 }
 
                 ctaBar.innerHTML = `
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                         <span style="font-weight:700; color:var(--c-primary);">エントリー受付中</span>
-                        <span style="font-size:0.8rem; color:#718096;">${periodStr}</span>
+                        <span style="font-size:0.9rem; color:#e53e3e; font-weight:bold;">${periodStr}</span>
                     </div>
                     <div style="font-size:0.9rem; margin-bottom:10px;">${openTour.name}</div>
                     <a href="entry.html" class="btn-cta">エントリー</a>
@@ -1173,6 +1359,63 @@
                 ctaBar.style.display = 'none';
             }
         }
+
+        // Modal Logic
+        window.openResultModal = (id) => {
+            const t = tournamentsData.find(x => x.id === id);
+            if (!t || !t.winner) return;
+
+            const w = t.winner;
+            const modal = document.getElementById('resModal');
+            document.getElementById('resTeam').textContent = w.team || 'Unknown Team';
+            document.getElementById('resUniv').textContent = w.univ || '-';
+            document.getElementById('resCircle').textContent = w.circle || '-';
+
+            // Image
+            const imgArea = document.getElementById('resImgArea');
+            if (w.image) {
+                imgArea.innerHTML = `<img src="${w.image}" alt="Winner Image">`;
+            } else {
+                imgArea.innerHTML = `<span>No Image</span>`;
+            }
+
+            // Members
+            const memArea = document.getElementById('resMembers');
+            memArea.innerHTML = '';
+            if (w.members && w.members.length > 0) {
+                w.members.forEach(m => {
+                    memArea.innerHTML += `
+                        <div class="res-mem-item">
+                            <div class="res-mem-icon"></div>
+                            ${m}
+                        </div>
+                    `;
+                });
+            } else {
+                memArea.innerHTML = `<span style="color:#a0aec0; grid-column:span 2;">メンバー情報なし</span>`;
+            }
+
+            // Link
+            const linkBtn = document.getElementById('resLink');
+            if (w.url) {
+                linkBtn.href = w.url;
+                linkBtn.style.display = 'block';
+            } else {
+                linkBtn.style.display = 'none';
+            }
+
+            modal.classList.add('active');
+            modal.style.display = 'flex';
+        };
+
+        window.closeResModal = () => {
+            const modal = document.getElementById('resModal');
+            modal.classList.remove('active');
+            setTimeout(() => modal.style.display = 'none', 300);
+        };
+        document.getElementById('resModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('resModal')) window.closeResModal();
+        });
 
         // Load on start
         loadTournaments();
