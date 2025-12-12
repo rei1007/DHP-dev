@@ -36,3 +36,41 @@ export function parseMarkdown(text) {
     
     return html;
 }
+
+// Loading & Scroll Animation Logic
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Loading
+    // Check if overlay exists, if not create it (auto-injection)
+    if (!document.querySelector('.loading-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.classList.add('loading-overlay');
+        overlay.innerHTML = '<div class="ink-spinner"></div>';
+        document.body.appendChild(overlay);
+        
+        // Ensure it's hidden after window load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                // Remove from DOM eventually if needed, or just hide
+                 setTimeout(() => overlay.style.display = 'none', 600);
+            }, 800); 
+        });
+        // Fallback
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+            setTimeout(() => overlay.style.display = 'none', 600);
+        }, 3000);
+    }
+
+    // 2. Scroll Fade Up
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+});

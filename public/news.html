@@ -43,7 +43,7 @@
 
             <div class="footer-links">
                 <a href="privacy.html">利用規約・プライバシーポリシー</a>
-                <a href="admin.html target="_blank">運営ダッシュボード</a>
+                <a href="admin.html" target="_blank">運営ダッシュボード</a>
             </div>
 
             <p style="margin-top:40px; font-size:0.8rem; color:#718096;">&copy; 2025 Inkollege Student Cup.</p>
@@ -51,6 +51,11 @@
     </footer>
 
     <script type="module" src="js/news.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.news-item, .page-title').forEach(el => el.classList.add('fade-up'));
+        });
+    </script>
 </body>
 
 </html>
