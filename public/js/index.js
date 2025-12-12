@@ -58,7 +58,7 @@ async function loadTournaments() {
             let entryTypeStr = '参加制限なし';
             if (t.entryType === 'circle_only') entryTypeStr = '同一サークル限定';
             else if (t.entryType === 'cross_ok') entryTypeStr = 'クロスサークルOK';
-            else if (t.entryType === 'invite') entryTypeStr = '招待制/選抜';
+            else if (t.entryType === 'invite') entryTypeStr = 'サークル選抜';
 
             // Date formatting
             const d = t.eventDate ? new Date(t.eventDate) : null;

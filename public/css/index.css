@@ -588,7 +588,7 @@
 }
 
 .tour-entry-stress {
-    color: #e53e3e;
+    color: #3182ce;
     font-weight: 700;
 }
 
@@ -838,6 +838,10 @@
     background: #e53e3e;
     color: white;
     box-shadow: 0 4px 6px rgba(229, 62, 62, 0.3);
+}
+
+#resArchiveBtn {
+    margin-bottom: 10px;
 }
 
 /* Rich Result Buttons */

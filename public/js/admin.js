@@ -414,25 +414,16 @@ window.generateDraft = () => {
     const titleEl = document.getElementById('inpNewsTitle');
     const bodyEl = document.getElementById('inpNewsBody');
 
-    titleEl.value = `【大会告知】${t.name} 開催決定！`;
+    titleEl.value = `${t.name} 開催決定！`;
     const d = new Date(t.eventDate);
     const dateStr = `${d.getMonth() + 1}/${d.getDate()}`;
     const entryStart = new Date(t.entryStart);
     const entryEnd = new Date(t.entryEnd);
 
     bodyEl.value = `
-# ${t.name} 開催！
+# ${t.name} を開催します
 
 ${t.name}の開催が決定しました。皆様の参加をお待ちしています！
-
-## 大会概要
-- **開催日時**: ${dateStr} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}〜
-- **ルール**: ${t.rules ? t.rules.join('/') : '未定'}
-- **参加資格**: ${t.entryType === 'circle_only' ? '同一サークル限定' : '制限なし'}
-
-## エントリー
-${entryStart.getMonth() + 1}/${entryStart.getDate()} 〜 ${entryEnd.getMonth() + 1}/${entryEnd.getDate()} まで受付中！
-詳細は[大会詳細・エントリーページ](entry.html)をご確認ください。
     `.trim();
 }
 

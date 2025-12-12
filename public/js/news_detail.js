@@ -121,13 +121,13 @@ async function render(data) {
                 const rulesStr = t.rules ? t.rules.map(r => `<span style="display:inline-block; background:#edf2f7; padding:2px 8px; border-radius:4px; margin-right:5px; font-size:0.85rem;">${r}</span>`).join('') : '未定';
 
                 // License
-                const licenseHtml = t.license ? `<div style="font-size:0.8rem; color:#718096; text-align:center; margin-top:20px;">任天堂許諾番号: ${t.license}<br><a href="https://www.nintendo.co.jp/tournament_guideline/index.html" target="_blank" style="color:#718096; text-decoration:underline;">任天堂のコミュニティ大会ガイドライン</a>を遵守して開催します。</div>` : '';
+                const licenseHtml = t.license ? `<div style="font-size:0.8rem; color:#718096; text-align:center; margin-top:20px;">任天堂許諾番号: ${t.license}<br>当大会は任天堂の協賛‧提携を受けたものではありません。<br><a href="https://www.nintendo.co.jp/tournament_guideline/index.html" target="_blank" style="color:#718096; text-decoration:underline;">コミュニティ大会ガイドライン</a>に基づき運営されます。<br><a href="https://www.nintendo.co.jp/tournament_guideline/rules.html" target="_blank" style="color:#718096; text-decoration:underline;">コミュニティ大会への出場および観戦に関する規約</a>を遵守してください。</div>` : '';
 
 
                 // Construction of Rich Overview
                 tourInfoHtml = `
                 <div style="margin-top:50px; border-top:2px solid #edf2f7; padding-top:40px;">
-                    <h2 style="font-size:1.5rem; font-weight:800; text-align:center; margin-bottom:30px; font-family:var(--f-jp);">大会概要</h2>
+                    <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:30px; font-family:var(--f-jp);">大会概要</h2>
                     
                     <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
                         
@@ -150,7 +150,7 @@ async function render(data) {
                             <div>
                                 <div style="font-size:0.9rem; color:#718096; font-weight:bold; margin-bottom:5px;">参加資格</div>
                                 <div style="font-weight:bold; color:#2d3748;">
-                                    ${t.entryType === 'circle_only' ? '同一サークル限定' : (t.entryType === 'invite' ? '招待制/選抜' : 'クロスサークルOK (制限なし)')}
+                                    ${t.entryType === 'circle_only' ? '同一サークル限定' : (t.entryType === 'invite' ? 'サークル選抜' : 'クロスサークルOK (制限なし)')}
                                 </div>
                             </div>
                         </div>
