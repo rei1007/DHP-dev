@@ -2,26 +2,40 @@ import { db } from "./common.js";
 import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 async function loadTournaments() {
+    // List element
     const list = document.getElementById('tourList');
-    // For safety, if list is null (which happened before), stop.
-    if (!list) {
-         console.warn("tourList element not found");
-         return;
-    }
-    
-    // Create loading element if not exists or use existing pattern
-    // The previous code expected 'tour-loading' but it might not be in HTML anymore.
+    if (!list) return;
+
+    // Loading
     list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">Loading...</div>';
 
     try {
-        const q = query(collection(db, "tournaments"), orderBy("eventDate", "desc"), limit(6));
+        // Fetch ALL to client-side sort properly (assuming dataset is small < 100)
+        // If dataset grows, we need composite index in Firestore.
+        // Query by eventDate desc to get latest first initially
+        const q = query(collection(db, "tournaments"), orderBy("eventDate", "desc"));
         const snapshot = await getDocs(q);
-        const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        let tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         if (tours.length === 0) {
             list.innerHTML = '<div style="grid-column:1/-1; text-align:center; width:100%; padding:40px;">現在表示できる大会情報はありません。</div>';
             return;
         }
+
+        // Client-side Sort: Open -> Upcoming -> Closed
+        const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
+        tours.sort((a, b) => {
+            const sA = statusOrder[a.status] || 99;
+            const sB = statusOrder[b.status] || 99;
+            if (sA !== sB) return sA - sB;
+            // secondary: eventDate desc
+             const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+             const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+             return dB - dA;
+        });
+
+        // Limit to 6
+        tours = tours.slice(0, 6);
 
         let html = '';
         tours.forEach(t => {
@@ -48,15 +62,31 @@ async function loadTournaments() {
 
             // Date formatting
             const d = t.eventDate ? new Date(t.eventDate) : null;
+            // Only stress if valid date AND not just placeholding
+            // Logic: if date exists, format it.
+            // Requirement: "Remove blue bg if date adjusting" -> implied if date invalid or generic? 
+            // Actually, if we have date object valid, apply stress? 
+            // User said: "date adjusting... remove blue bg". Usually means d is null or text says '日程調整中'.
+            // Here d is null if empty.
+            
             const dateStr = d ? `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')} (${['日', '月', '火', '水', '木', '金', '土'][d.getDay()]}) ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}` : '日程調整中';
+            const dateClass = (d && t.status !== 'closed') ? 'tour-date-stress' : '';
+
+            // Cast info for Card
+            let castInfoHtml = '';
+            if (t.caster && t.caster.name) {
+                castInfoHtml += `<div style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:#718096; margin-top:5px;"><span style="background:#edf2f7; padding:1px 5px; border-radius:3px; font-size:0.75rem;">実況</span> ${t.caster.name}</div>`;
+            }
+            if (t.commentator && t.commentator.name) {
+                castInfoHtml += `<div style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:#718096; margin-top:2px;"><span style="background:#edf2f7; padding:1px 5px; border-radius:3px; font-size:0.75rem;">解説</span> ${t.commentator.name}</div>`;
+            }
 
             // Onclick action
             let onclick = "";
             let cursorStyle = "";
             if (t.status === 'closed') {
-                // Click handled via window.handleTourClick logic checking status
                 cursorStyle = "cursor:pointer;";
-            } else if (t.status === 'open') {
+            } else if (t.status === 'open' || t.status === 'upcoming') {
                  cursorStyle = "cursor:pointer;";
             }
 
@@ -70,7 +100,7 @@ async function loadTournaments() {
                         <div class="tour-meta">
                             <div>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                <span class="${t.status !== 'closed' ? 'tour-date-stress' : ''}">${dateStr}</span>
+                                <span class="${dateClass}">${dateStr}</span>
                             </div>
                             <div>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
@@ -80,6 +110,7 @@ async function loadTournaments() {
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
                                 <span>${ruleStr}</span>
                             </div>
+                            ${castInfoHtml}
                         </div>
                     </div>
                     ${t.status === 'open' ? `<div style="margin-top:10px; text-align:right;"><span class="tour-entry-stress">エントリー受付中 &rarr;</span></div>` : ''}

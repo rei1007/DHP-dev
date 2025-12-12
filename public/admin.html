@@ -73,145 +73,111 @@
                 <input type="hidden" id="editId">
 
                 <div class="modal-grid">
-                    <!-- Left Column -->
+                    <!-- Column 1: Basic Info -->
                     <div>
+                        <div class="section-label">基本情報</div>
                         <label>大会名</label>
-                        <input type="text" id="inpName" placeholder="例: 第9回 大学杯θ" required>
+                        <input type="text" id="inpTourName" placeholder="第n回 大学対抗戦">
 
-                        <label>開催日時 (任意)</label>
-                        <input type="datetime-local" id="inpEventDate">
+                        <div style="display:flex; gap:10px;">
+                            <div style="flex:1;">
+                                <label>大会ステータス</label>
+                                <select id="inpStatus">
+                                    <option value="upcoming">開催予定</option>
+                                    <option value="open">エントリー受付中</option>
+                                    <option value="closed">終了</option>
+                                </select>
+                            </div>
+                            <div style="flex:1;">
+                                <label>開催日</label>
+                                <input type="datetime-local" id="inpEventDate">
+                            </div>
+                        </div>
 
-                        <fieldset>
-                            <legend>エントリー期間 (ステータス自動判定)</legend>
-                            <label>開始日時</label>
-                            <input type="datetime-local" id="inpEntryStart" onchange="window.calcStatus()">
-                            <label>終了日時</label>
-                            <input type="datetime-local" id="inpEntryEnd" onchange="window.calcStatus()">
-                        </fieldset>
-
-                        <label>ステータス</label>
-                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
-                            <select id="inpStatus" required style="margin-bottom:0; flex:1;">
-                                <option value="upcoming">開催予定 (Upcoming)</option>
-                                <option value="open">エントリー受付中 (Open)</option>
-                                <option value="closed">終了 (Closed)</option>
-                            </select>
-                            <button type="button" class="btn btn-sm" onclick="window.calcStatus(true)">再計算</button>
+                        <label>エントリー期間</label>
+                        <div style="display:flex; gap:5px; align-items:center;">
+                            <input type="datetime-local" id="inpEntryStart">
+                            <span>~</span>
+                            <input type="datetime-local" id="inpEntryEnd">
                         </div>
 
                         <label>大会規約URL</label>
-                        <input type="url" id="inpRulesUrl" placeholder="https://...">
+                        <input type="url" id="inpRulesUrl" placeholder="https://note.com/...">
 
-                        <label>エントリー制限タイプ</label>
-                        <select id="inpEntryType">
-                            <option value="circle_only">クロスサークルなし（同一サークル限定）</option>
-                            <option value="cross_ok">クロスサークルあり</option>
-                            <option value="invite">サークル選抜のみ</option>
-                        </select>
+                        <div class="section-label">ルール設定</div>
+                        <label>採用ルール</label>
+                        <div class="checkbox-group" id="ruleGroup"></div>
+
+                        <label>ステージ制限</label>
+                        <div class="stage-grid" id="stageGroup" style="height:200px;"></div>
+
+                        <div class="section-label">結果・アーカイブ</div>
+                        <label>優勝チーム名</label>
+                        <input type="text" id="inpWinTeam">
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="inpWinUniv" placeholder="大学名" style="flex:1;">
+                            <input type="text" id="inpWinCircle" placeholder="サークル名" style="flex:1;">
+                        </div>
+                        <label>優勝メンバー (カンマ区切り)</label>
+                        <input type="text" id="inpWinMembers" placeholder="Player1, Player2, ...">
+                        <label>優勝時の画像URL</label>
+                        <input type="url" id="inpWinImage" placeholder="https://...">
+                        <label>優勝ポストURL</label>
+                        <input type="url" id="inpWinUrl" placeholder="https://x.com/...">
+
+                        <label>配信アーカイブURL</label>
+                        <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
                     </div>
 
-                    <!-- Right Column -->
+                    <!-- Column 2: Advanced & Cast -->
                     <div>
-                        <fieldset>
+                        <div class="section-label">参加条件・XP</div>
+                        <label>エントリータイプ</label>
+                        <select id="inpEntryType">
+                            <option value="circle_only">同一サークル限定</option>
+                            <option value="cross_ok">クロスサークルOK</option>
+                            <option value="invite">招待制/選抜</option>
+                        </select>
+
+                        <fieldset style="margin-top:10px;">
                             <legend>XP制限</legend>
                             <label class="checkbox-label" style="margin-bottom:10px;">
                                 <input type="checkbox" id="chkXpNone"> 制限なし
                             </label>
-                            <div id="xpInputs">
-                                <label>平均XP上限</label>
-                                <input type="number" id="inpXpAvg" placeholder="例: 2200">
-                                <label>最高XP上限</label>
-                                <input type="number" id="inpXpMax" placeholder="例: 2400">
-                            </div>
-                        </fieldset>
-
-                        <label>採用ルール (複数選択可)</label>
-                        <div class="checkbox-group" id="ruleGroup">
-                            <!-- JSで生成: ナワバリ, エリア... -->
-                        </div>
-
-                        <label>使用不可ステージ選択</label>
-                        <div class="stage-grid" id="stageGroup">
-                            <!-- JSで生成 -->
-                        </div>
-                        <!-- キャスト・配信情報 -->
-                        <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">キャスト・配信・許諾</h4>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.8rem;">実況者名</label>
-                                <input type="text" id="inpCasterName" placeholder="実況者名">
-                            </div>
-                            <div>
-                                <label style="font-size:0.8rem;">実況アイコンURL</label>
-                                <input type="url" id="inpCasterIcon" placeholder="https://...">
-                            </div>
-                        </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                            <div><input type="text" id="inpCasterX" placeholder="実況 X (Twitter) ID (@...)"></div>
-                            <div><input type="url" id="inpCasterYt" placeholder="実況 YouTube URL"></div>
-                        </div>
-
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.8rem;">解説者名</label>
-                                <input type="text" id="inpComName" placeholder="解説者名">
-                            </div>
-                            <div>
-                                <label style="font-size:0.8rem;">解説アイコンURL</label>
-                                <input type="url" id="inpComIcon" placeholder="https://...">
-                            </div>
-                        </div>
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
-                            <div><input type="text" id="inpComX" placeholder="解説 X (Twitter) ID (@...)"></div>
-                            <div><input type="url" id="inpComYt" placeholder="解説 YouTube URL"></div>
-                        </div>
-                        <!-- 配信・許諾 -->
-                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                            <div>
-                                <label style="font-size:0.8rem;">配信担当</label>
-                                <input type="text" id="inpOpName" placeholder="配信担当者名">
-                            </div>
-                            <div>
-                                <label style="font-size:0.8rem;">任天堂許諾番号</label>
-                                <input type="text" id="inpLicense" placeholder="NJ...">
-                            </div>
-                        </div>
-                        <div style="margin-top:10px;">
-                            <label style="font-size:0.8rem;">アーカイブ動画URL</label>
                             <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
-                        </div>
-
-                        <!-- 優勝チーム情報 -->
                     </div>
-                </div>
 
-                <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">優勝チーム情報（終了後入力）</h4>
-                <div style="margin-bottom:15px;">
-                    <label style="font-size:0.9rem;">優勝画像URL (16:9)</label>
-                    <input type="url" id="inpWinImage" placeholder="https://example.com/image.jpg">
+                    <!-- 優勝チーム情報 -->
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="inpWinTeamName" placeholder="チーム名" style="margin-bottom:0;">
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                        <input type="text" id="inpWinUniv" placeholder="大学名" style="margin-bottom:0;">
-                        <input type="text" id="inpWinCircle" placeholder="サークル名" style="margin-bottom:0;">
-                    </div>
-                </div>
-                <label style="font-size:0.9rem;">優勝メンバー (4名)</label>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-                    <input type="text" id="inpWinMem1" placeholder="メンバー1" style="margin-bottom:0;">
-                    <input type="text" id="inpWinMem2" placeholder="メンバー2" style="margin-bottom:0;">
-                    <input type="text" id="inpWinMem3" placeholder="メンバー3" style="margin-bottom:0;">
-                    <input type="text" id="inpWinMem4" placeholder="メンバー4" style="margin-bottom:0;">
-                </div>
-                <input type="url" id="inpWinUrl" placeholder="結果詳細URL (Xのポスト等)">
-
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
-                    <button type="submit" class="btn btn-green" style="width:auto;">保存する</button>
-                </div>
-            </form>
         </div>
+
+        <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">優勝チーム情報（終了後入力）</h4>
+        <div style="margin-bottom:15px;">
+            <label style="font-size:0.9rem;">優勝画像URL (16:9)</label>
+            <input type="url" id="inpWinImage" placeholder="https://example.com/image.jpg">
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
+            <input type="text" id="inpWinTeamName" placeholder="チーム名" style="margin-bottom:0;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <input type="text" id="inpWinUniv" placeholder="大学名" style="margin-bottom:0;">
+                <input type="text" id="inpWinCircle" placeholder="サークル名" style="margin-bottom:0;">
+            </div>
+        </div>
+        <label style="font-size:0.9rem;">優勝メンバー (4名)</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+            <input type="text" id="inpWinMem1" placeholder="メンバー1" style="margin-bottom:0;">
+            <input type="text" id="inpWinMem2" placeholder="メンバー2" style="margin-bottom:0;">
+            <input type="text" id="inpWinMem3" placeholder="メンバー3" style="margin-bottom:0;">
+            <input type="text" id="inpWinMem4" placeholder="メンバー4" style="margin-bottom:0;">
+        </div>
+        <input type="url" id="inpWinUrl" placeholder="結果詳細URL (Xのポスト等)">
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
+            <button type="submit" class="btn btn-green" style="width:auto;">保存する</button>
+        </div>
+        </form>
+    </div>
     </div>
 
     <!-- NEWS MODAL -->
