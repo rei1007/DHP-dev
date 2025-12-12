@@ -296,6 +296,8 @@ document.getElementById('btnNew').addEventListener('click', () => {
     modal.style.display = 'flex';
 });
 
+document.getElementById('inpEntryType').addEventListener('change', window.toggleCrossCircle);
+
 document.getElementById('btnCloseModal').addEventListener('click', () => modal.style.display = 'none');
 
 editForm.addEventListener('submit', async (e) => {
