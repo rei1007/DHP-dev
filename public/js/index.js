@@ -34,11 +34,58 @@ async function loadTournaments() {
              return dB - dA;
         });
 
-        // Limit to 6
-        tours = tours.slice(0, 6);
+        // Limit Logic
+        // PC: 6, Mobile: 3 (Logic: Open + Upcoming + at least 1 Closed. If sum > 3, show all. Else fill to 3 with Closed)
+        // Check Mobile
+        const isMobile = window.innerWidth < 768;
+        let limitCount = isMobile ? 3 : 6;
+
+        let displayTours = [];
+
+        if (isMobile) {
+             const opens = tours.filter(t => t.status === 'open');
+             const upcomings = tours.filter(t => t.status === 'upcoming');
+             const closeds = tours.filter(t => t.status === 'closed');
+             
+             // Base set: All Open + All Upcoming + 1 Closed (if exists)
+             let base = [...opens, ...upcomings];
+             if (closeds.length > 0) {
+                 base.push(closeds[0]);
+             }
+             
+             if (base.length > 3) {
+                 // Exceeds 3, allow it
+                 displayTours = base;
+             } else {
+                 // Less than 3, fill with more closed if available
+                 displayTours = base;
+                 let needed = 3 - base.length;
+                 // Add more closed, skipping the first one if we already added it
+                 let nextClosedIndex = (closeds.length > 0) ? 1 : 0;
+                 while(needed > 0 && nextClosedIndex < closeds.length) {
+                     displayTours.push(closeds[nextClosedIndex]);
+                     nextClosedIndex++;
+                     needed--;
+                 }
+             }
+        } else {
+            // PC: Simple limit 6
+             displayTours = tours.slice(0, 6);
+        }
+        
+        // Re-sort displayTours just in case (though we picked them in order mostly, pure concat might ruin date order of closed)
+        // Reuse sort logic
+        displayTours.sort((a, b) => {
+            const sA = statusOrder[a.status] || 99;
+            const sB = statusOrder[b.status] || 99;
+            if (sA !== sB) return sA - sB;
+            const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+            const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+            return dB - dA;
+        });
 
         let html = '';
-        tours.forEach(t => {
+        displayTours.forEach(t => {
             let statusBadge = '';
             let statusLabel = '';
             if (t.status === 'open') {
@@ -176,6 +223,8 @@ function updateCtaBar(data) {
         checkCtaVisibility(); // Initial check
     } else {
         ctaBar.classList.add('hidden'); // No data -> Hide
+        // Force hide style to be sure
+        ctaBar.style.display = 'none';
     }
 }
 
