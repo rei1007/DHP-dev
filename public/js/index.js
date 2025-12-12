@@ -3,12 +3,15 @@ import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.
 
 async function loadTournaments() {
     const list = document.getElementById('tourList');
-    const loadEl = document.getElementById('tour-loading');
-
-    // Timeline elements
-    const timelineEl = document.getElementById('timelineList'); // if exists
-    // Currently timeline is static in HTML, but we can dynamic it if needed.
-    // For now, focusing on the "Latest Tournaments" grid.
+    // For safety, if list is null (which happened before), stop.
+    if (!list) {
+         console.warn("tourList element not found");
+         return;
+    }
+    
+    // Create loading element if not exists or use existing pattern
+    // The previous code expected 'tour-loading' but it might not be in HTML anymore.
+    list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">Loading...</div>';
 
     try {
         const q = query(collection(db, "tournaments"), orderBy("eventDate", "desc"), limit(6));
@@ -16,8 +19,7 @@ async function loadTournaments() {
         const tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         if (tours.length === 0) {
-            list.innerHTML = '<div style="text-align:center; width:100%; padding:40px;">現在表示できる大会情報はありません。</div>';
-            loadEl.style.display = 'none';
+            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; width:100%; padding:40px;">現在表示できる大会情報はありません。</div>';
             return;
         }
 
@@ -50,24 +52,17 @@ async function loadTournaments() {
 
             // Onclick action
             let onclick = "";
+            let cursorStyle = "";
             if (t.status === 'closed') {
-                // Open result modal
-                //Pass necessary data JSON stringified? Or fetch on demand?
-                // Let's attach data attributes and handle click
-                // Storing data in a global map or simply embedding data attributes
-                // NOTE: 't' object needs to be effectively serialized for the onclick or we attach event listeners later.
-                // Using a global function with ID is easier.
-            } else {
-                // Go to detail page (entry.html or news detail)
-                // For now, maybe just do nothing or link to generic entry if open
-                if (t.status === 'open') {
-                    onclick = `location.href='entry.html?id=${t.id}'`;
-                }
+                // Click handled via window.handleTourClick logic checking status
+                cursorStyle = "cursor:pointer;";
+            } else if (t.status === 'open') {
+                 cursorStyle = "cursor:pointer;";
             }
 
             // HTML Construction
             html += `
-            <div class="tour-card" onclick="window.handleTourClick('${t.id}')">
+            <div class="tour-card" onclick="window.handleTourClick('${t.id}')" style="${cursorStyle}">
                 <div class="tour-status ${statusBadge}">${statusLabel}</div>
                 <div class="tour-body">
                     <div>
@@ -95,17 +90,63 @@ async function loadTournaments() {
         });
 
         list.innerHTML = html;
-        loadEl.style.display = 'none';
 
         // Store tournaments globally for modal
         window._tournamentsData = tours;
+        
+        // Update CTA Bar
+        updateCtaBar(tours);
 
     } catch (e) {
         console.error(e);
-        list.innerHTML = '<div style="padding:20px; color:red;">読み込みエラー</div>';
-        loadEl.style.display = 'none';
+        list.innerHTML = '<div style="grid-column:1/-1; padding:20px; color:red; text-align:center;">読み込みエラー</div>';
     }
 }
+
+// CTA Bar Logic
+function updateCtaBar(data) {
+    const ctaBar = document.getElementById('ctaBar');
+    if (!ctaBar) return;
+
+    // Find Open tournaments
+    const openTours = data.filter(t => t.status === 'open');
+    let targetTour = null;
+
+    if (openTours.length > 0) {
+        // Sort by entryEnd ASC
+        openTours.sort((a, b) => {
+            const tA = a.entryEnd ? new Date(a.entryEnd).getTime() : 9999999999999;
+            const tB = b.entryEnd ? new Date(b.entryEnd).getTime() : 9999999999999;
+            return tA - tB;
+        });
+        targetTour = openTours[0];
+    }
+
+    if (targetTour) {
+        let periodStr = '';
+        if (targetTour.entryEnd) {
+            const d = new Date(targetTour.entryEnd);
+            const m = d.getMonth() + 1;
+            const day = d.getDate();
+            const hours = ('0' + d.getHours()).slice(-2);
+            const mins = ('0' + d.getMinutes()).slice(-2);
+            periodStr = `~${m}/${day} <span style="font-size:0.85em">(${hours}:${mins})</span>`;
+        }
+
+        ctaBar.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-weight:700; color:var(--c-primary);">エントリー受付中</span>
+                <span style="font-size:0.9rem; color:#e53e3e; font-weight:bold;">${periodStr}</span>
+            </div>
+            <div style="font-size:0.9rem; margin-bottom:10px;">${targetTour.name}</div>
+            <a href="entry.html?id=${targetTour.id}" class="btn-cta">エントリー</a>
+        `;
+        ctaBar.classList.remove('hidden'); // Data exists -> Show (Observer handles hidden class)
+    } else {
+        ctaBar.classList.add('hidden'); // No data -> Hide
+    }
+}
+
 
 // Global handler
 window.handleTourClick = (id) => {
@@ -115,12 +156,8 @@ window.handleTourClick = (id) => {
     if (t.status === 'closed') {
         openResModal(t);
     } else if (t.status === 'open') {
-        // Navigate to entry?
-        // Since we don't have dynamic entry page yet, maybe just alert or go to news
-        location.href = 'news.html'; // Or specific news/entry page
+        location.href = `entry.html?id=${t.id}`; 
     } else {
-        // Upcoming
-        // Maybe go to news
         location.href = 'news.html';
     }
 };
@@ -130,12 +167,16 @@ window.openResModal = (t) => {
     // Set data
     const w = t.winner || {};
 
-    document.getElementById('resImg').src = w.image || ''; // Fallback image?
-    if (!w.image) document.getElementById('resImg').style.display = 'none';
-    else document.getElementById('resImg').style.display = 'block';
+    const imgArea = document.getElementById('resImgArea');
+    if (w.image) {
+        imgArea.innerHTML = `<img src="${w.image}" alt="Winner">`;
+    } else {
+        imgArea.innerHTML = `<span style="color:white;">No Image</span>`;
+    }
 
     document.getElementById('resTeam').textContent = w.teamName || 'Team Name';
-    document.getElementById('resAff').textContent = `${w.univ || ''} ${w.circle || ''}`;
+    document.getElementById('resUniv').textContent = w.univ || '-';
+    document.getElementById('resCircle').textContent = w.circle || '-';
 
     // Members
     const memArea = document.getElementById('resMembers');
@@ -153,11 +194,9 @@ window.openResModal = (t) => {
     // Caster
     if (t.caster && t.caster.name) {
         const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : '<div style="width:32px;height:32px;background:#edf2f7;border-radius:50%;"></div>';
-
         let links = '';
         if (t.caster.x) links += `<a href="https://twitter.com/${t.caster.x.replace('@', '')}" target="_blank" class="cast-link-btn"><svg width="14" height="14"><use href="#icon-x"/></svg></a>`;
         if (t.caster.yt) links += `<a href="${t.caster.yt}" target="_blank" class="cast-link-btn"><svg width="16" height="16"><use href="#icon-yt"/></svg></a>`;
-
         castHtml += `
         <div class="cast-card">
             <div class="cast-info">
@@ -170,11 +209,9 @@ window.openResModal = (t) => {
     // Commentator
     if (t.commentator && t.commentator.name) {
         const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : '<div style="width:32px;height:32px;background:#edf2f7;border-radius:50%;"></div>';
-
         let links = '';
         if (t.commentator.x) links += `<a href="https://twitter.com/${t.commentator.x.replace('@', '')}" target="_blank" class="cast-link-btn"><svg width="14" height="14"><use href="#icon-x"/></svg></a>`;
         if (t.commentator.yt) links += `<a href="${t.commentator.yt}" target="_blank" class="cast-link-btn"><svg width="16" height="16"><use href="#icon-yt"/></svg></a>`;
-
         castHtml += `
         <div class="cast-card">
             <div class="cast-info">
@@ -185,19 +222,12 @@ window.openResModal = (t) => {
         </div>`;
     }
 
-    // Operator
-    if (t.operator) {
-        castHtml += `<div style="margin-bottom:5px; font-size:0.9rem; margin-top:10px;"><strong>配信:</strong> ${t.operator}</div>`;
-    }
-
-    // License
-    if (t.license) {
-        castHtml += `<div style="font-size:0.75rem; color:#a0aec0;">許諾番号: ${t.license}</div>`;
-    }
+    if (t.operator) castHtml += `<div style="margin-bottom:5px; font-size:0.9rem; margin-top:10px;"><strong>配信:</strong> ${t.operator}</div>`;
+    if (t.license) castHtml += `<div style="font-size:0.75rem; color:#a0aec0;">許諾番号: ${t.license}</div>`;
 
     castArea.innerHTML = castHtml;
 
-    // Buttons: Archive & Post
+    // Buttons
     const archiveBtn = document.getElementById('resArchiveBtn');
     if (t.archiveUrl) {
         archiveBtn.href = t.archiveUrl;
@@ -209,7 +239,7 @@ window.openResModal = (t) => {
     const linkBtn = document.getElementById('resLink');
     if (w.url) {
         linkBtn.href = w.url;
-        linkBtn.innerText = '優勝ポストを見る'; // Text Update
+        linkBtn.innerText = '優勝ポストを見る';
         linkBtn.style.display = 'block';
     } else {
         linkBtn.style.display = 'none';
@@ -239,12 +269,13 @@ async function loadIndexNews() {
     try {
         const q = query(collection(db, "news"), orderBy("date", "desc"), limit(5));
         const snapshot = await getDocs(q);
+        
         if (snapshot.empty) {
             if (newsList) newsList.innerHTML = '<div style="padding:20px; text-align:center; color:#a0aec0;">お知らせはありません</div>';
-            return;
+            // Even if empty, do not return if you want to proceed nicely
         }
-
-        const news = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        const news = snapshot.empty ? [] : snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
         // Hero News (Latest 1)
         const latest = news[0];
@@ -266,7 +297,7 @@ async function loadIndexNews() {
         }
 
         // List
-        if (newsList) {
+        if (newsList && news.length > 0) {
             let html = '';
             news.forEach(n => {
                 let badgeClass = 'badge-info';
@@ -292,3 +323,88 @@ async function loadIndexNews() {
 
     } catch (e) { console.error('News load error', e); }
 }
+
+// Mobile Menu Logic
+const hamBtn = document.getElementById('hamBtn');
+const mobMenu = document.getElementById('mobMenu');
+const closeMob = document.getElementById('closeMob');
+
+if (hamBtn && mobMenu && closeMob) {
+    hamBtn.addEventListener('click', () => {
+        mobMenu.style.display = 'flex';
+    });
+    closeMob.addEventListener('click', () => {
+        mobMenu.style.display = 'none';
+    });
+    // Close on link click
+    mobMenu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => {
+            mobMenu.style.display = 'none';
+        });
+    });
+}
+
+// CTA Visibility Observer
+const ctaBar = document.getElementById('ctaBar');
+const footer = document.getElementById('footer');
+const hero = document.querySelector('.hero');
+
+if (ctaBar && footer && hero) {
+    const observer = new IntersectionObserver((entries) => {
+        let isHeroVisible = false; 
+        let isFooterVisible = false;
+        
+        // This logic basically tracks if either Hero OR Footer is in view
+        // Is it possible to know state of each? yes.
+        // entries contains all observed elements that changed.
+        // We need robust state tracking.
+        // Actually, simple way: toggle class based on entry.
+        entries.forEach(entry => {
+            if (entry.target === hero) {
+                if (entry.isIntersecting) ctaBar.classList.add('hidden'); // Hide at top
+                else ctaBar.classList.remove('hidden'); // Show when scrolled down
+            }
+            if (entry.target === footer) {
+                if (entry.isIntersecting) ctaBar.classList.add('hidden'); // Hide at bottom
+                else ctaBar.classList.remove('hidden'); // Show when not at bottom
+            }
+        });
+        // Wait, multiple intersection logic is tricky with single callback state.
+        // Let's rely on checking rects or maintain state variables?
+        // Simpler: 
+        // If hero is intersecting -> Hide
+        // If footer is intersecting -> Hide
+        // Else -> Show
+        // But entries only give us updates.
+    }, { threshold: 0.1 });
+    
+    // Better logic: separate observers or check both states.
+    // Let's implement Scroll event for simplicity and reliability if Observer is tricky here.
+    // Re-implementing with Scroll listener is often smoother for simple logic like "Hide at top and bottom".
+}
+
+window.addEventListener('scroll', () => {
+    if (!ctaBar) return;
+    const scrollY = window.scrollY;
+    const winHeight = window.innerHeight;
+    const docHeight = document.body.scrollHeight;
+    
+    // Hide at top (first 500px)
+    if (scrollY < 500) {
+        ctaBar.classList.add('hidden');
+        return;
+    }
+    
+    // Hide at bottom (near footer)
+    if ((scrollY + winHeight) >= (docHeight - 100)) {
+        ctaBar.classList.add('hidden');
+        return;
+    }
+    
+    // Show otherwise
+    // Check if it has content (only valid if innerHTML is populated, but class hidden handles visibility)
+    // We only remove hidden if we want it shown.
+    if (ctaBar.innerHTML.trim() !== "") {
+        ctaBar.classList.remove('hidden');
+    }
+});

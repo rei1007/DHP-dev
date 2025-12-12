@@ -487,9 +487,17 @@ async function loadNews() {
     allNews.forEach(n => {
         const div = document.createElement('div');
         div.className = 't-item'; // Reuse
+        let badgeClass = 'badge-info';
+        let badgeText = 'お知らせ';
+
+        if (n.type === 'tournament') { badgeClass = 'status-upcoming'; badgeText = '大会情報'; }
+        else if (n.badge === 'important') { badgeClass = 'badge-important'; badgeText = '重要'; }
+        else if (n.badge === 'recruit') { badgeClass = 'badge-recruit'; badgeText = '募集'; }
+        else if (n.badge === 'penalty') { badgeClass = 'badge-important'; badgeText = 'ペナルティ'; }
+
         div.innerHTML = `
         <div class="t-info">
-            <h3><span class="status-badge" style="background:#718096">${n.badge}</span> ${n.title}</h3>
+            <h3><span class="news-cat ${badgeClass}">${badgeText}</span> ${n.title}</h3>
             <div class="t-status">公開日: ${n.date} | Type: ${n.type}</div>
         </div>
          <div class="t-actions">

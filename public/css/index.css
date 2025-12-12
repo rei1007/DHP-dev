@@ -57,6 +57,11 @@
     color: var(--c-primary);
 }
 
+/* Ensure hidden by default on desktop */
+.mob-dash-btn {
+    display: none;
+}
+
 .btn-dash-nav {
     padding: 8px 20px;
     border-radius: 4px;
@@ -658,18 +663,21 @@
     position: absolute;
     top: 15px;
     right: 15px;
-    background: #edf2f7;
-    width: 32px;
-    height: 32px;
+    background: white;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    border: none;
-    font-size: 1.2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: 1.5rem;
     color: #718096;
     transition: 0.2s;
+    z-index: 20;
+    /* Ensure above image */
 }
 
 .res-close:hover {
