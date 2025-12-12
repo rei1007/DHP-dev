@@ -323,8 +323,12 @@ window.openResModal = (t) => {
     const univBox = modal.querySelector('.res-univ-info');
     if (univBox) {
         // Use Regex split for safety
-        const univs = (w.univ || '').split(/\s*\/\s*/).filter(s => s);
-        const circles = (w.circle || '').split(/\s*\/\s*/).filter(s => s);
+        let univs = (w.univ || '').split(/\s*\/\s*/).filter(s => s);
+        let circles = (w.circle || '').split(/\s*\/\s*/).filter(s => s);
+
+        // Check separate fields (univ2, circle2) if not combined
+        if (w.univ2 && univs.length === 1) univs.push(w.univ2);
+        if (w.circle2 && circles.length === 1) circles.push(w.circle2);
         
         if (univs.length > 1 || circles.length > 1) {
             // Multiple (Cross)
