@@ -1,6 +1,10 @@
 import { db } from "./common.js";
 import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Global state
+let allTournaments = [];
+let lastIsMobile = window.innerWidth < 768;
+
 async function loadTournaments() {
     // List element
     const list = document.getElementById('tourList');
@@ -10,176 +14,183 @@ async function loadTournaments() {
     list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">Loading...</div>';
 
     try {
-        // Fetch ALL to client-side sort properly (assuming dataset is small < 100)
-        // If dataset grows, we need composite index in Firestore.
-        // Query by eventDate desc to get latest first initially
         const q = query(collection(db, "tournaments"), orderBy("eventDate", "desc"));
         const snapshot = await getDocs(q);
-        let tours = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        allTournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        if (tours.length === 0) {
-            list.innerHTML = '<div style="grid-column:1/-1; text-align:center; width:100%; padding:40px;">現在表示できる大会情報はありません。</div>';
-            return;
-        }
+        // Store globally for modal
+        window._tournamentsData = allTournaments;
 
-        // Client-side Sort: Open -> Upcoming -> Closed
-        const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
-        tours.sort((a, b) => {
-            const sA = statusOrder[a.status] || 99;
-            const sB = statusOrder[b.status] || 99;
-            if (sA !== sB) return sA - sB;
-            // secondary: eventDate desc
-             const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
-             const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
-             return dB - dA;
-        });
-
-        // Limit Logic
-        // PC: 6, Mobile: 3 (Logic: Open + Upcoming + at least 1 Closed. If sum > 3, show all. Else fill to 3 with Closed)
-        // Check Mobile
-        const isMobile = window.innerWidth < 768;
-        let limitCount = isMobile ? 3 : 6;
-
-        let displayTours = [];
-
-        if (isMobile) {
-             const opens = tours.filter(t => t.status === 'open');
-             const upcomings = tours.filter(t => t.status === 'upcoming');
-             const closeds = tours.filter(t => t.status === 'closed');
-             
-             // Base set: All Open + All Upcoming + 1 Closed (if exists)
-             let base = [...opens, ...upcomings];
-             if (closeds.length > 0) {
-                 base.push(closeds[0]);
-             }
-             
-             if (base.length > 3) {
-                 // Exceeds 3, allow it
-                 displayTours = base;
-             } else {
-                 // Less than 3, fill with more closed if available
-                 displayTours = base;
-                 let needed = 3 - base.length;
-                 // Add more closed, skipping the first one if we already added it
-                 let nextClosedIndex = (closeds.length > 0) ? 1 : 0;
-                 while(needed > 0 && nextClosedIndex < closeds.length) {
-                     displayTours.push(closeds[nextClosedIndex]);
-                     nextClosedIndex++;
-                     needed--;
-                 }
-             }
-        } else {
-            // PC: Simple limit 6
-             displayTours = tours.slice(0, 6);
-        }
-        
-        // Re-sort displayTours just in case (though we picked them in order mostly, pure concat might ruin date order of closed)
-        // Reuse sort logic
-        displayTours.sort((a, b) => {
-            const sA = statusOrder[a.status] || 99;
-            const sB = statusOrder[b.status] || 99;
-            if (sA !== sB) return sA - sB;
-            const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
-            const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
-            return dB - dA;
-        });
-
-        let html = '';
-        displayTours.forEach(t => {
-            let statusBadge = '';
-            let statusLabel = '';
-            if (t.status === 'open') {
-                statusBadge = 'status-open';
-                statusLabel = 'エントリー受付中';
-            } else if (t.status === 'upcoming') {
-                statusBadge = 'status-upcoming';
-                statusLabel = '開催予定';
-            } else {
-                statusBadge = 'status-closed';
-                statusLabel = '終了';
-            }
-
-            // Rules
-            const ruleStr = (t.rules && Array.isArray(t.rules)) ? t.rules.join(' / ') : 'ルール未定';
-            // Entry Type
-            let entryTypeStr = '参加制限なし';
-            if (t.entryType === 'circle_only') entryTypeStr = '同一サークル限定';
-            else if (t.entryType === 'cross_ok') entryTypeStr = 'クロスサークルOK';
-            else if (t.entryType === 'invite') entryTypeStr = 'サークル選抜';
-
-            // Date formatting
-            const d = t.eventDate ? new Date(t.eventDate) : null;
-            // Only stress if valid date AND not just placeholding
-            // Logic: if date exists, format it.
-            // Requirement: "Remove blue bg if date adjusting" -> implied if date invalid or generic? 
-            // Actually, if we have date object valid, apply stress? 
-            // User said: "date adjusting... remove blue bg". Usually means d is null or text says '日程調整中'.
-            // Here d is null if empty.
-            
-            const dateStr = d ? `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')} (${['日', '月', '火', '水', '木', '金', '土'][d.getDay()]}) ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}` : '日程調整中';
-            const dateClass = (d && t.status !== 'closed') ? 'tour-date-stress' : '';
-
-            // Cast info for Card
-            let castInfoHtml = '';
-            if (t.caster && t.caster.name) {
-                castInfoHtml += `<div style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:#718096; margin-top:5px;"><span style="background:#edf2f7; padding:1px 5px; border-radius:3px; font-size:0.75rem;">実況</span> ${t.caster.name}</div>`;
-            }
-            if (t.commentator && t.commentator.name) {
-                castInfoHtml += `<div style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:#718096; margin-top:2px;"><span style="background:#edf2f7; padding:1px 5px; border-radius:3px; font-size:0.75rem;">解説</span> ${t.commentator.name}</div>`;
-            }
-
-            // Onclick action
-            let onclick = "";
-            let cursorStyle = "";
-            if (t.status === 'closed') {
-                cursorStyle = "cursor:pointer;";
-            } else if (t.status === 'open' || t.status === 'upcoming') {
-                 cursorStyle = "cursor:pointer;";
-            }
-
-            // HTML Construction
-            html += `
-            <div class="tour-card" onclick="window.handleTourClick('${t.id}')" style="${cursorStyle}">
-                <div class="tour-status ${statusBadge}">${statusLabel}</div>
-                <div class="tour-body">
-                    <div>
-                        <div class="tour-title">${t.name}</div>
-                        <div class="tour-meta">
-                            <div>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                                <span class="${dateClass}">${dateStr}</span>
-                            </div>
-                            <div>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-                                <span>${entryTypeStr}</span>
-                            </div>
-                            <div>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
-                                <span>${ruleStr}</span>
-                            </div>
-                            ${castInfoHtml}
-                        </div>
-                    </div>
-                    ${t.status === 'open' ? `<div style="margin-top:10px; text-align:right;"><span class="tour-entry-stress">エントリー受付中 &rarr;</span></div>` : ''}
-                    ${t.status === 'closed' ? `<div style="margin-top:10px; text-align:right; font-size:0.85rem; color:#718096; font-weight:bold;">結果を見る &rarr;</div>` : ''}
-                </div>
-            </div>
-            `;
-        });
-
-        list.innerHTML = html;
-
-        // Store tournaments globally for modal
-        window._tournamentsData = tours;
-        
-        // Update CTA Bar
-        updateCtaBar(tours);
+        // Render initially
+        renderTourList();
 
     } catch (e) {
         console.error(e);
         list.innerHTML = '<div style="grid-column:1/-1; padding:20px; color:red; text-align:center;">読み込みエラー</div>';
     }
 }
+
+function renderTourList() {
+    const list = document.getElementById('tourList');
+    if (!list || allTournaments.length === 0) {
+        if (list) list.innerHTML = '<div style="grid-column:1/-1; text-align:center; width:100%; padding:40px;">現在表示できる大会情報はありません。</div>';
+        return;
+    }
+
+    // Client-side Sort: Open -> Upcoming -> Closed
+    const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
+    
+    // Sort all first
+    let sortedTours = [...allTournaments];
+    sortedTours.sort((a, b) => {
+        const sA = statusOrder[a.status] || 99;
+        const sB = statusOrder[b.status] || 99;
+        if (sA !== sB) return sA - sB;
+         const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+         const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+         return dB - dA;
+    });
+
+    const isMobile = window.innerWidth < 768;
+    let displayTours = [];
+
+    if (isMobile) {
+         // Mobile Logic: Max 3 items usually
+         // Priority: Open > Upcoming > Closed
+         // Constraint: Must show at least 1 Closed if possible?
+         // User Rule: "エントリー中と開催予定、および終了大会最低1つは必ず表示...これらが3つを超えてしまう場合は...許容"
+         
+         const opens = sortedTours.filter(t => t.status === 'open');
+         const upcomings = sortedTours.filter(t => t.status === 'upcoming');
+         const closeds = sortedTours.filter(t => t.status === 'closed');
+         
+         // Base: All Open + All Upcoming
+         let base = [...opens, ...upcomings];
+         
+         // Add 1 latest closed if exists
+         if (closeds.length > 0) {
+             base.push(closeds[0]);
+         }
+         
+         if (base.length > 3) {
+             // Exceeds 3 -> Show All of Base
+             displayTours = base;
+         } else {
+             // Less than 3 -> Fill with more closed to reach 3
+             displayTours = base;
+             let needed = 3 - base.length;
+             let nextClosedIndex = (closeds.length > 0) ? 1 : 0; // consumed index 0 already
+             while(needed > 0 && nextClosedIndex < closeds.length) {
+                 displayTours.push(closeds[nextClosedIndex]);
+                 nextClosedIndex++;
+                 needed--;
+             }
+         }
+    } else {
+        // PC: Strict limit 6
+        displayTours = sortedTours.slice(0, 6);
+    }
+    
+    // Re-sort displayTours to maintain order (Status > Date) after merging logic
+    displayTours.sort((a, b) => {
+        const sA = statusOrder[a.status] || 99;
+        const sB = statusOrder[b.status] || 99;
+        if (sA !== sB) return sA - sB;
+        const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
+        const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
+        return dB - dA;
+    });
+
+    // Generate HTML
+    let html = '';
+    displayTours.forEach(t => {
+        let statusBadge = '';
+        let statusLabel = '';
+        if (t.status === 'open') {
+            statusBadge = 'status-open';
+            statusLabel = 'エントリー受付中';
+        } else if (t.status === 'upcoming') {
+            statusBadge = 'status-upcoming';
+            statusLabel = '開催予定';
+        } else {
+            statusBadge = 'status-closed';
+            statusLabel = '終了';
+        }
+
+        // Rules
+        const ruleStr = (t.rules && Array.isArray(t.rules)) ? t.rules.join(' / ') : 'ルール未定';
+        // Entry Type
+        let entryTypeStr = '参加制限なし';
+        if (t.entryType === 'circle_only') entryTypeStr = '同一サークル限定';
+        else if (t.entryType === 'cross_ok') entryTypeStr = 'クロスサークルOK';
+        else if (t.entryType === 'invite') entryTypeStr = 'サークル選抜';
+
+        // Date
+        const d = t.eventDate ? new Date(t.eventDate) : null;
+        const dateStr = d ? `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')} (${['日', '月', '火', '水', '木', '金', '土'][d.getDay()]}) ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}` : '日程調整中';
+        const dateClass = (d && t.status !== 'closed') ? 'tour-date-stress' : '';
+
+        // Cast info
+        let castInfoHtml = '';
+        if (t.caster && t.caster.name) {
+            castInfoHtml += `<div style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:#718096; margin-top:5px;"><span style="background:#edf2f7; padding:1px 5px; border-radius:3px; font-size:0.75rem;">実況</span> ${t.caster.name}</div>`;
+        }
+        if (t.commentator && t.commentator.name) {
+            castInfoHtml += `<div style="display:flex; align-items:center; gap:5px; font-size:0.85rem; color:#718096; margin-top:2px;"><span style="background:#edf2f7; padding:1px 5px; border-radius:3px; font-size:0.75rem;">解説</span> ${t.commentator.name}</div>`;
+        }
+
+        // Onclick
+        let onclick = "";
+        let cursorStyle = "";
+        if (t.status === 'closed') {
+            cursorStyle = "cursor:pointer;";
+        } else if (t.status === 'open' || t.status === 'upcoming') {
+             cursorStyle = "cursor:pointer;";
+        }
+
+        html += `
+        <div class="tour-card" onclick="window.handleTourClick('${t.id}')" style="${cursorStyle}">
+            <div class="tour-status ${statusBadge}">${statusLabel}</div>
+            <div class="tour-body">
+                <div>
+                    <div class="tour-title">${t.name}</div>
+                    <div class="tour-meta">
+                        <div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                            <span class="${dateClass}">${dateStr}</span>
+                        </div>
+                        <div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>${entryTypeStr}</span>
+                        </div>
+                        <div>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                            <span>${ruleStr}</span>
+                        </div>
+                        ${castInfoHtml}
+                    </div>
+                </div>
+                ${t.status === 'open' ? `<div style="margin-top:10px; text-align:right;"><span class="tour-entry-stress">エントリー受付中 &rarr;</span></div>` : ''}
+                ${t.status === 'closed' ? `<div style="margin-top:10px; text-align:right; font-size:0.85rem; color:#718096; font-weight:bold;">結果を見る &rarr;</div>` : ''}
+            </div>
+        </div>
+        `;
+    });
+
+    list.innerHTML = html;
+
+    // Update CTA Bar
+    updateCtaBar(displayTours);
+}
+
+// Resize listener
+window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile !== lastIsMobile) {
+        lastIsMobile = isMobile;
+        renderTourList();
+    }
+});
 
 // CTA Bar Logic
 function updateCtaBar(data) {
