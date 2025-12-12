@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>運営ダッシュボード | 大学杯</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --c-bg: #f8f9fa;
+            --c-surface: #ffffff;
+            --c-text: #2d3748;
+            --c-primary: #1a365d;
+            --c-accent: #00A4C2;
+            --c-danger: #e53e3e;
+            --border: 1px solid #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Zen Kaku Gothic New', sans-serif;
+            background: var(--c-bg);
+            color: var(--c-text);
+            padding-bottom: 50px;
+        }
+
+        .login-wrapper {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dashboard-wrapper {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: var(--c-surface);
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            border: var(--border);
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-title {
+            margin-bottom: 2rem;
+            color: var(--c-primary);
+            font-size: 1.5rem;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .btn {
+            background: var(--c-primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            width: 100%;
+            /* Mobile friendly */
+        }
+
+        @media (min-width: 600px) {
+            .btn {
+                width: auto;
+            }
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-green {
+            background: var(--c-accent);
+        }
+
+        .btn-red {
+            background: var(--c-danger);
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.9rem;
+            width: auto;
+            margin-left: 5px;
+        }
+
+        /* Dashboard Layout */
+        .dash-header {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        @media (min-width: 600px) {
+            .dash-header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                text-align: left;
+            }
+        }
+
+        .tournament-list {
+            display: grid;
+            gap: 20px;
+        }
+
+        .t-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (min-width: 600px) {
+            .t-item {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+
+        .t-info h3 {
+            margin-bottom: 5px;
+            color: var(--c-primary);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            color: white;
+            background: #718096;
+            white-space: nowrap;
+        }
+
+        .status-open {
+            background: var(--c-accent);
+        }
+
+        .status-upcoming {
+            background: #b7791f;
+        }
+
+        .t-status {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 10px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        @media (min-width: 600px) {
+            .modal-content {
+                padding: 30px;
+            }
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .modal-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .loading-mask {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            place-items: center;
+            z-index: 2000;
+            font-weight: bold;
+        }
+
+        /* Custom Input Groups */
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            background: #edf2f7;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+
+        .checkbox-label input {
+            width: auto;
+            margin: 0;
+        }
+
+        .checkbox-label:has(input:checked) {
+            background: #bee3f8;
+            color: var(--c-primary);
+        }
+
+        .stage-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+            border: 1px solid #cbd5e0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        fieldset {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        legend {
+            padding: 0 10px;
+            font-weight: bold;
+            color: var(--c-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loader" class="loading-mask">Processing...</div>
+
+    <!-- 1. Login View -->
+    <div id="loginView" class="login-wrapper">
+        <div class="card login-card">
+            <h1 class="login-title">大学杯 運営管理</h1>
+            <p style="margin-bottom:20px; font-size:0.9rem;">管理用パスワードを入力してください</p>
+            <form id="loginForm">
+                <input type="password" id="adminPass" placeholder="Password" required>
+                <button type="submit" class="btn">ログイン</button>
+            </form>
+            <p id="loginMsg" style="color:red; margin-top:10px; font-size:0.8rem;"></p>
+        </div>
+    </div>
+
+    <!-- 2. Dashboard View -->
+    <div id="dashView" class="dashboard-wrapper">
+        <div class="dash-header">
+            <div>
+                <h2>大会データ管理</h2>
+                <div style="font-size:0.8rem; color:#718096;">Firestore: tournaments</div>
+            </div>
+            <button class="btn btn-green" id="btnNew">＋ 新規大会作成</button>
+        </div>
+
+        <div class="tournament-list" id="tList">
+            <!-- JSでリスト生成 -->
+        </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2 id="modalTitle" style="margin-bottom:20px;">大会情報の編集</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId">
+
+                <div class="modal-grid">
+                    <!-- Left Column -->
+                    <div>
+                        <label>大会名</label>
+                        <input type="text" id="inpName" placeholder="例: 第9回 大学杯θ" required>
+
+                        <label>開催日時 (任意)</label>
+                        <input type="datetime-local" id="inpEventDate">
+
+                        <fieldset>
+                            <legend>エントリー期間 (ステータス自動判定)</legend>
+                            <label>開始日時</label>
+                            <input type="datetime-local" id="inpEntryStart" onchange="window.calcStatus()">
+                            <label>終了日時</label>
+                            <input type="datetime-local" id="inpEntryEnd" onchange="window.calcStatus()">
+                        </fieldset>
+
+                        <label>ステータス</label>
+                        <div style="display:flex; gap:10px; align-items:center; margin-bottom:15px;">
+                            <select id="inpStatus" required style="margin-bottom:0; flex:1;">
+                                <option value="upcoming">開催予定 (Upcoming)</option>
+                                <option value="open">エントリー受付中 (Open)</option>
+                                <option value="closed">終了 (Closed)</option>
+                            </select>
+                            <button type="button" class="btn btn-sm" onclick="window.calcStatus(true)">再計算</button>
+                        </div>
+
+                        <label>大会規約URL</label>
+                        <input type="url" id="inpRulesUrl" placeholder="https://...">
+
+                        <label>エントリー制限タイプ</label>
+                        <select id="inpEntryType">
+                            <option value="circle_only">クロスサークルなし（同一サークル限定）</option>
+                            <option value="cross_ok">クロスサークルあり</option>
+                            <option value="invite">サークル選抜のみ</option>
+                        </select>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div>
+                        <fieldset>
+                            <legend>XP制限</legend>
+                            <label class="checkbox-label" style="margin-bottom:10px;">
+                                <input type="checkbox" id="chkXpNone"> 制限なし
+                            </label>
+                            <div id="xpInputs">
+                                <label>平均XP上限</label>
+                                <input type="number" id="inpXpAvg" placeholder="例: 2200">
+                                <label>最高XP上限</label>
+                                <input type="number" id="inpXpMax" placeholder="例: 2400">
+                            </div>
+                        </fieldset>
+
+                        <label>採用ルール (複数選択可)</label>
+                        <div class="checkbox-group" id="ruleGroup">
+                            <!-- JSで生成: ナワバリ, エリア... -->
+                        </div>
+
+                        <label>使用不可ステージ選択</label>
+                        <div class="stage-grid" id="stageGroup">
+                            <!-- JSで生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="margin:20px 0; border:0; border-top:1px dashed #ccc;">
+
+                <h4>優勝チーム情報（終了後入力）</h4>
+                <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
+                    <input type="text" id="inpWinTeamName" placeholder="チーム名" style="margin-bottom:0;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <input type="text" id="inpWinUniv" placeholder="大学名" style="margin-bottom:0;">
+                        <input type="text" id="inpWinCircle" placeholder="サークル名" style="margin-bottom:0;">
+                    </div>
+                </div>
+                <input type="url" id="inpWinUrl" placeholder="結果ツイートURL等">
+
+                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                    <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
+                    <button type="submit" class="btn btn-green" style="width:auto;">保存する</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCaVNHlJBoWcn9BQd7jPFtELxsOLHCZdv0",
+            authDomain: "daigakuhai.firebaseapp.com",
+            projectId: "daigakuhai",
+            storageBucket: "daigakuhai.firebasestorage.app",
+            messagingSenderId: "1003642519018",
+            appId: "1:1003642519018:web:2700931b9f1c451ec74693"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const colRef = collection(db, "tournaments");
+
+        // Constants
+        const RULES = ["ナワバリ", "エリア", "ヤグラ", "ホコ", "アサリ"];
+        const STAGES = [
+            "ユノハナ大渓谷", "ゴンズイ地区", "ヤガラ市場", "マテガイ放水路", "ナメロウ金属",
+            "マサバ海峡大橋", "キンメダイ美術館", "マヒマヒリゾート＆スパ", "海女美術大学", "チョウザメ造船",
+            "ザトウマーケット", "スメーシーワールド", "クサヤ温泉", "ヒラメが丘団地", "ナンプラー遺跡",
+            "マンタマリア号", "タラポートショッピングパーク", "コンブトラック", "タカアシ経済特区", "オヒョウ海運",
+            "バイガイ亭", "ネギトロ炭鉱", "カジキ空港", "リュウグウターミナル", "デカライン高架下"
+        ];
+
+        // Init UI
+        const ruleGroup = document.getElementById('ruleGroup');
+        RULES.forEach(r => {
+            const lbl = document.createElement('label');
+            lbl.className = 'checkbox-label';
+            lbl.innerHTML = `<input type="checkbox" name="rule" value="${r}"> ${r}`;
+            ruleGroup.appendChild(lbl);
+        });
+
+        const stageGroup = document.getElementById('stageGroup');
+        STAGES.forEach(s => {
+            const lbl = document.createElement('label');
+            lbl.className = 'checkbox-label';
+            lbl.innerHTML = `<input type="checkbox" name="stage" value="${s}"> ${s}`;
+            stageGroup.appendChild(lbl);
+        });
+
+        // XP Toggle Logic
+        const chkXpNone = document.getElementById('chkXpNone');
+        const xpInputs = document.getElementById('xpInputs');
+        chkXpNone.addEventListener('change', () => {
+            if (chkXpNone.checked) {
+                xpInputs.style.opacity = '0.5';
+                xpInputs.style.pointerEvents = 'none';
+                document.getElementById('inpXpAvg').value = '';
+                document.getElementById('inpXpMax').value = '';
+            } else {
+                xpInputs.style.opacity = '1';
+                xpInputs.style.pointerEvents = 'auto';
+            }
+        });
+
+        // Status Calculation
+        window.calcStatus = (force = false) => {
+            const start = document.getElementById('inpEntryStart').value;
+            const end = document.getElementById('inpEntryEnd').value;
+            const statusEl = document.getElementById('inpStatus');
+
+            if (!start || !end) return;
+
+            const now = new Date();
+            const sDate = new Date(start);
+            const eDate = new Date(end);
+
+            let newStatus = 'upcoming';
+            if (now < sDate) {
+                newStatus = 'upcoming';
+            } else if (now >= sDate && now <= eDate) {
+                newStatus = 'open';
+            } else {
+                newStatus = 'closed';
+            }
+            statusEl.value = newStatus;
+        };
+
+        // Auth
+        // Auth Logic
+        const loginForm = document.getElementById('loginForm');
+        const loginView = document.getElementById('loginView');
+        const dashView = document.getElementById('dashView');
+        const storedAuth = localStorage.getItem('dhp_auth_ok');
+
+        if (storedAuth === 'true') { showDash(); }
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('adminPass').value;
+
+            // Local dev fallback
+            if (location.protocol === 'file:' && pass === 'admin1234') {
+                proceedLogin();
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/auth', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pass })
+                });
+
+                if (res.ok) {
+                    proceedLogin();
+                } else {
+                    document.getElementById('loginMsg').textContent = 'パスワードが違います';
+                }
+            } catch (err) {
+                if (pass === 'admin1234') {
+                    console.warn("API unreachable, falling back to local check");
+                    proceedLogin();
+                } else {
+                    document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
+                }
+            }
+        });
+
+        function proceedLogin() {
+            localStorage.setItem('dhp_auth_ok', 'true');
+            showDash();
+        }
+
+        function showDash() {
+            loginView.style.display = 'none';
+            dashView.style.display = 'block';
+            loadData();
+        }
+
+        // Data Logic
+        let tournaments = [];
+        const tList = document.getElementById('tList');
+        const loader = document.getElementById('loader');
+
+        async function loadData() {
+            loader.style.display = 'grid';
+            tList.innerHTML = '';
+            try {
+                const q = query(colRef, orderBy("eventDate", "desc"));
+                const snapshot = await getDocs(q);
+                tournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+                tournaments.forEach(t => {
+                    const div = document.createElement('div');
+                    div.className = 't-item';
+
+                    let badgeClass = 'status-badge';
+                    let statusLabel = t.status;
+                    if (t.status === 'open') { badgeClass += ' status-open'; statusLabel = '受付中'; }
+                    else if (t.status === 'upcoming') { badgeClass += ' status-upcoming'; statusLabel = '予定'; }
+                    else { statusLabel = '終了'; }
+
+                    const dateStr = t.eventDate ? new Date(t.eventDate).toLocaleDateString() : '-';
+                    const rulesStr = t.rules ? t.rules.join(' / ') : '-';
+
+                    div.innerHTML = `
+                        <div class="t-info">
+                            <h3><span class="${badgeClass}">${statusLabel}</span> ${t.name}</h3>
+                            <div class="t-status">開催: ${dateStr} | ルール: ${rulesStr}</div>
+                        </div>
+                        <div class="t-actions">
+                            <button class="btn btn-sm" onclick="window.editItem('${t.id}')">編集</button>
+                            <button class="btn btn-sm btn-red" onclick="window.deleteItem('${t.id}')">削除</button>
+                        </div>
+                    `;
+                    tList.appendChild(div);
+                });
+            } catch (error) {
+                console.error(error);
+                // エラーが出てもUIは表示する
+            }
+            loader.style.display = 'none';
+        }
+
+        const modal = document.getElementById('editModal');
+        const editForm = document.getElementById('editForm');
+
+        window.editItem = (id) => {
+            const t = tournaments.find(x => x.id === id);
+            if (!t) return;
+            document.getElementById('editId').value = t.id;
+            document.getElementById('modalTitle').textContent = '大会情報の編集';
+
+            document.getElementById('inpName').value = t.name || '';
+            document.getElementById('inpStatus').value = t.status || 'upcoming';
+            document.getElementById('inpEventDate').value = t.eventDate || '';
+            document.getElementById('inpEntryStart').value = t.entryStart || '';
+            document.getElementById('inpEntryEnd').value = t.entryEnd || '';
+            document.getElementById('inpRulesUrl').value = t.rulesUrl || '';
+            document.getElementById('inpEntryType').value = t.entryType || 'circle_only';
+
+            // XP
+            if (t.xpLimit === 'none') {
+                chkXpNone.checked = true;
+                xpInputs.style.opacity = '0.5'; xpInputs.style.pointerEvents = 'none';
+                document.getElementById('inpXpAvg').value = '';
+                document.getElementById('inpXpMax').value = '';
+            } else {
+                chkXpNone.checked = false;
+                xpInputs.style.opacity = '1'; xpInputs.style.pointerEvents = 'auto';
+                document.getElementById('inpXpAvg').value = t.xpLimit?.avg || '';
+                document.getElementById('inpXpMax').value = t.xpLimit?.max || '';
+            }
+
+            // Rules Checkboxes
+            document.querySelectorAll('input[name="rule"]').forEach(cb => {
+                cb.checked = t.rules ? t.rules.includes(cb.value) : false;
+            });
+            // Stages Checkboxes
+            document.querySelectorAll('input[name="stage"]').forEach(cb => {
+                cb.checked = t.banStages ? t.banStages.includes(cb.value) : false;
+            });
+
+            // Winner
+            document.getElementById('inpWinTeamName').value = t.winner?.team || '';
+            document.getElementById('inpWinUniv').value = t.winner?.univ || '';
+            document.getElementById('inpWinCircle').value = t.winner?.circle || '';
+            document.getElementById('inpWinUrl').value = t.winner?.url || '';
+
+            modal.style.display = 'flex';
+        };
+
+        window.deleteItem = async (id) => {
+            if (!confirm('本当に削除しますか？')) return;
+            loader.style.display = 'grid';
+            try {
+                await deleteDoc(doc(db, "tournaments", id));
+                await loadData();
+            } catch (e) { alert('削除失敗: ' + e.message); }
+            loader.style.display = 'none';
+        };
+
+        document.getElementById('btnNew').addEventListener('click', () => {
+            document.getElementById('editId').value = '';
+            editForm.reset();
+            chkXpNone.checked = false;
+            xpInputs.style.opacity = '1'; xpInputs.style.pointerEvents = 'auto';
+            document.getElementById('modalTitle').textContent = '新規大会作成';
+            modal.style.display = 'flex';
+        });
+
+        document.getElementById('btnCloseModal').addEventListener('click', () => modal.style.display = 'none');
+
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            loader.style.display = 'grid';
+
+            const id = document.getElementById('editId').value;
+
+            // Collect Rules
+            const selRules = Array.from(document.querySelectorAll('input[name="rule"]:checked')).map(cb => cb.value);
+            // Collect Ban Stages
+            const selStages = Array.from(document.querySelectorAll('input[name="stage"]:checked')).map(cb => cb.value);
+
+            // XP Logic
+            let xpData = 'none';
+            if (!chkXpNone.checked) {
+                xpData = {
+                    avg: document.getElementById('inpXpAvg').value,
+                    max: document.getElementById('inpXpMax').value
+                };
+            }
+
+            const data = {
+                name: document.getElementById('inpName').value,
+                status: document.getElementById('inpStatus').value,
+                eventDate: document.getElementById('inpEventDate').value, // ISO String
+                entryStart: document.getElementById('inpEntryStart').value,
+                entryEnd: document.getElementById('inpEntryEnd').value,
+                rulesUrl: document.getElementById('inpRulesUrl').value,
+                entryType: document.getElementById('inpEntryType').value,
+                xpLimit: xpData,
+                rules: selRules,
+                banStages: selStages,
+                updatedAt: new Date().toISOString()
+            };
+
+            const wTeam = document.getElementById('inpWinTeamName').value;
+            const wUniv = document.getElementById('inpWinUniv').value;
+            const wCircle = document.getElementById('inpWinCircle').value;
+            const wUrl = document.getElementById('inpWinUrl').value;
+
+            if (wTeam || wUniv || wCircle || wUrl) {
+                data.winner = { team: wTeam, univ: wUniv, circle: wCircle, url: wUrl };
+            } else {
+                data.winner = null;
+            }
+
+            try {
+                if (id) {
+                    await updateDoc(doc(db, "tournaments", id), data);
+                } else {
+                    data.createdAt = new Date().toISOString();
+                    await addDoc(colRef, data);
+                }
+                modal.style.display = 'none';
+                await loadData();
+            } catch (error) {
+                alert('保存失敗: ' + error.message);
+                console.error(error);
+            }
+            loader.style.display = 'none';
+        });
+    </script>
+</body>
+
+</html>
