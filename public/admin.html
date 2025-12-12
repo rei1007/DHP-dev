@@ -111,22 +111,7 @@
                         <label>ステージ制限</label>
                         <div class="stage-grid" id="stageGroup" style="height:200px;"></div>
 
-                        <div class="section-label">結果・アーカイブ</div>
-                        <label>優勝チーム名</label>
-                        <input type="text" id="inpWinTeam">
-                        <div style="display:flex; gap:10px;">
-                            <input type="text" id="inpWinUniv" placeholder="大学名" style="flex:1;">
-                            <input type="text" id="inpWinCircle" placeholder="サークル名" style="flex:1;">
-                        </div>
-                        <label>優勝メンバー (カンマ区切り)</label>
-                        <input type="text" id="inpWinMembers" placeholder="Player1, Player2, ...">
-                        <label>優勝時の画像URL</label>
-                        <input type="url" id="inpWinImage" placeholder="https://...">
-                        <label>優勝ポストURL</label>
-                        <input type="url" id="inpWinUrl" placeholder="https://x.com/...">
 
-                        <label>配信アーカイブURL</label>
-                        <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
                     </div>
 
                     <!-- Column 2: Advanced & Cast -->
@@ -189,6 +174,38 @@
                         <input type="text" id="inpLicense" placeholder="NJ...">
                     </div>
                 </div>
+
+                <!-- Result & Archive Section -->
+                <div class="section-label" style="margin-top:20px;">結果・アーカイブ</div>
+                <label>優勝チーム名</label>
+                <input type="text" id="inpWinTeam">
+
+                <div style="display:flex; gap:10px; margin-bottom:5px;">
+                    <div style="flex:1;">
+                        <input type="text" id="inpWinUniv" placeholder="大学名1" style="margin-bottom:5px; width:100%;">
+                        <input type="text" id="inpWinCircle" placeholder="サークル名1" style="margin-bottom:0; width:100%;">
+                    </div>
+                    <div id="grpWinDual" style="flex:1; display:none;">
+                        <input type="text" id="inpWinUniv2" placeholder="大学名2" style="margin-bottom:5px; width:100%;">
+                        <input type="text" id="inpWinCircle2" placeholder="サークル名2" style="margin-bottom:0; width:100%;">
+                    </div>
+                </div>
+
+                <label style="margin-top:10px;">優勝メンバー (4名)</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <input type="text" id="inpWinMem1" placeholder="メンバー1">
+                    <input type="text" id="inpWinMem2" placeholder="メンバー2">
+                    <input type="text" id="inpWinMem3" placeholder="メンバー3">
+                    <input type="text" id="inpWinMem4" placeholder="メンバー4">
+                </div>
+
+                <label>優勝時の画像URL</label>
+                <input type="url" id="inpWinImage" placeholder="https://...">
+                <label>優勝ポストURL</label>
+                <input type="url" id="inpWinUrl" placeholder="https://x.com/...">
+
+                <label>配信アーカイブURL</label>
+                <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
 
                 <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
                     <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>

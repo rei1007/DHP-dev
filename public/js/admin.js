@@ -189,6 +189,17 @@ async function loadData() {
 const modal = document.getElementById('editModal');
 const editForm = document.getElementById('editForm');
 
+// Cross Circle Toggle
+window.toggleCrossCircle = () => {
+    const type = document.getElementById('inpEntryType').value;
+    const grp = document.getElementById('grpWinDual');
+    if (type === 'cross_ok') {
+        grp.style.display = 'block';
+    } else {
+        grp.style.display = 'none';
+    }
+};
+
 window.editItem = (id) => {
     const t = tournaments.find(x => x.id === id);
     if (!t) return;
@@ -202,12 +213,13 @@ window.editItem = (id) => {
     document.getElementById('inpEntryEnd').value = t.entryEnd || '';
     document.getElementById('inpRulesUrl').value = t.rulesUrl || '';
     document.getElementById('inpEntryType').value = t.entryType || 'circle_only';
+    
+    // Toggle Dual Inputs
+    window.toggleCrossCircle();
 
     // XP
     if (t.xpLimit === 'none' || !t.xpLimit) {
         chkXpNone.checked = true;
-        // xpInputs might need to target the new container style if changed, but ID is same?
-        // In previous step HTML, id="xpInputs". So it is fine.
         xpInputs.style.opacity = '0.5'; xpInputs.style.pointerEvents = 'none';
         document.getElementById('inpXpAvg').value = '';
         document.getElementById('inpXpMax').value = '';
@@ -253,13 +265,23 @@ window.editItem = (id) => {
 
     // Winner
     document.getElementById('inpWinTeam').value = t.winner?.teamName || '';
+    
+    // Univ/Circle 1
     document.getElementById('inpWinUniv').value = t.winner?.univ || '';
     document.getElementById('inpWinCircle').value = t.winner?.circle || '';
+    
+    // Univ/Circle 2 (if exists)
+    document.getElementById('inpWinUniv2').value = t.winner?.univ2 || '';
+    document.getElementById('inpWinCircle2').value = t.winner?.circle2 || '';
+
     document.getElementById('inpWinImage').value = t.winner?.image || '';
     document.getElementById('inpWinUrl').value = t.winner?.url || '';
 
     const mems = t.winner?.members || [];
-    document.getElementById('inpWinMembers').value = mems.join(', ');
+    document.getElementById('inpWinMem1').value = mems[0] || '';
+    document.getElementById('inpWinMem2').value = mems[1] || '';
+    document.getElementById('inpWinMem3').value = mems[2] || '';
+    document.getElementById('inpWinMem4').value = mems[3] || '';
 
     modal.style.display = 'flex';
 };
@@ -270,6 +292,7 @@ document.getElementById('btnNew').addEventListener('click', () => {
     editForm.reset();
     xpInputs.style.opacity = '1'; xpInputs.style.pointerEvents = 'auto';
     chkXpNone.checked = false;
+    window.toggleCrossCircle(); // Reset dual inputs visibility
     modal.style.display = 'flex';
 });
 
@@ -290,9 +313,12 @@ editForm.addEventListener('submit', async (e) => {
             max: parseInt(document.getElementById('inpXpMax').value) || 0
         };
 
-        // Winner Members: Split by comma
-        const winMemsStr = document.getElementById('inpWinMembers').value || '';
-        const winMems = winMemsStr.split(',').map(s => s.trim()).filter(s => s !== '');
+        // Winner Members: Collect 4 inputs
+        const winMems = [];
+        for(let i=1; i<=4; i++) {
+            const val = document.getElementById(`inpWinMem${i}`).value.trim();
+            if(val) winMems.push(val);
+        }
 
         const data = {
             name: document.getElementById('inpTourName').value,
@@ -324,6 +350,8 @@ editForm.addEventListener('submit', async (e) => {
                 teamName: document.getElementById('inpWinTeam').value,
                 univ: document.getElementById('inpWinUniv').value,
                 circle: document.getElementById('inpWinCircle').value,
+                univ2: document.getElementById('inpWinUniv2').value,
+                circle2: document.getElementById('inpWinCircle2').value,
                 image: document.getElementById('inpWinImage').value,
                 url: document.getElementById('inpWinUrl').value,
                 members: winMems
