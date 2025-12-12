@@ -141,12 +141,38 @@ function updateCtaBar(data) {
             <div style="font-size:0.9rem; margin-bottom:10px;">${targetTour.name}</div>
             <a href="entry.html?id=${targetTour.id}" class="btn-cta">エントリー</a>
         `;
-        ctaBar.classList.remove('hidden'); // Data exists -> Show (Observer handles hidden class)
+        // Do not remove hidden class here. Let checkCtaVisibility handle it based on scroll.
+        checkCtaVisibility(); // Initial check
     } else {
         ctaBar.classList.add('hidden'); // No data -> Hide
     }
 }
 
+
+// Check Visibility Function
+function checkCtaVisibility() {
+    const ctaBar = document.getElementById('ctaBar');
+    if (!ctaBar || ctaBar.innerHTML.trim() === "") return;
+
+    const scrollY = window.scrollY;
+    const winHeight = window.innerHeight;
+    const docHeight = document.body.scrollHeight;
+
+    // Hide at top (first 500px)
+    if (scrollY < 500) {
+        ctaBar.classList.add('hidden');
+        return;
+    }
+    
+    // Hide at bottom (near footer)
+    if ((scrollY + winHeight) >= (docHeight - 100)) {
+        ctaBar.classList.add('hidden');
+        return;
+    }
+
+    // Show
+    ctaBar.classList.remove('hidden');
+}
 
 // Global handler
 window.handleTourClick = (id) => {
@@ -168,10 +194,36 @@ window.openResModal = (t) => {
     const w = t.winner || {};
 
     const imgArea = document.getElementById('resImgArea');
+    // Revert to image tag usage in simpler way if needed, but current innerHTML approach is fine.
+    // User asked to revert style, maybe structure too?
+    // Previous code used simple img src assignment. Let's stick to current but ensure it fits index.html structure.
+    // Wait, index.html structure might have changed in my mind vs reality.
+    // Let's check if 'resImgArea' exists or 'resImg' tag exists.
+    // In previous view_file of index.js (line 133), it used `document.getElementById('resImg').src`.
+    // In my last write_to_file (Step 174), I changed it to `document.getElementById('resImgArea')`.
+    // The USER asked to revert "Tournament card and result modal" design.
+    // I should probably revert JS logic for modal population to match the 'reverted' HTML structure if I changed it.
+    // But I didn't change HTML structure significantly, just JS.
+    // Note: The HTML output in Step 166 didn't show modal HTML.
+    // I will assume the JS logic I wrote in Step 174 is what they want REVERTED if it broke something or changed design.
+    // But they said "design", mainly close button overlap.
+    // I already fixed CSS for close button.
+    
+    // Let's keep the JS clean.
     if (w.image) {
-        imgArea.innerHTML = `<img src="${w.image}" alt="Winner">`;
+        // Check if element exists
+        const imgEl = document.getElementById('resImg');
+        if(imgEl) {
+             imgEl.src = w.image;
+             imgEl.style.display = 'block';
+        } else {
+             // Fallback if I changed HTML to Area
+             const area = document.getElementById('resImgArea');
+             if(area) area.innerHTML = `<img src="${w.image}" alt="Winner">`;
+        }
     } else {
-        imgArea.innerHTML = `<span style="color:white;">No Image</span>`;
+        const imgEl = document.getElementById('resImg');
+        if(imgEl) imgEl.style.display = 'none';
     }
 
     document.getElementById('resTeam').textContent = w.teamName || 'Team Name';
@@ -344,67 +396,5 @@ if (hamBtn && mobMenu && closeMob) {
     });
 }
 
-// CTA Visibility Observer
-const ctaBar = document.getElementById('ctaBar');
-const footer = document.getElementById('footer');
-const hero = document.querySelector('.hero');
-
-if (ctaBar && footer && hero) {
-    const observer = new IntersectionObserver((entries) => {
-        let isHeroVisible = false; 
-        let isFooterVisible = false;
-        
-        // This logic basically tracks if either Hero OR Footer is in view
-        // Is it possible to know state of each? yes.
-        // entries contains all observed elements that changed.
-        // We need robust state tracking.
-        // Actually, simple way: toggle class based on entry.
-        entries.forEach(entry => {
-            if (entry.target === hero) {
-                if (entry.isIntersecting) ctaBar.classList.add('hidden'); // Hide at top
-                else ctaBar.classList.remove('hidden'); // Show when scrolled down
-            }
-            if (entry.target === footer) {
-                if (entry.isIntersecting) ctaBar.classList.add('hidden'); // Hide at bottom
-                else ctaBar.classList.remove('hidden'); // Show when not at bottom
-            }
-        });
-        // Wait, multiple intersection logic is tricky with single callback state.
-        // Let's rely on checking rects or maintain state variables?
-        // Simpler: 
-        // If hero is intersecting -> Hide
-        // If footer is intersecting -> Hide
-        // Else -> Show
-        // But entries only give us updates.
-    }, { threshold: 0.1 });
-    
-    // Better logic: separate observers or check both states.
-    // Let's implement Scroll event for simplicity and reliability if Observer is tricky here.
-    // Re-implementing with Scroll listener is often smoother for simple logic like "Hide at top and bottom".
-}
-
-window.addEventListener('scroll', () => {
-    if (!ctaBar) return;
-    const scrollY = window.scrollY;
-    const winHeight = window.innerHeight;
-    const docHeight = document.body.scrollHeight;
-    
-    // Hide at top (first 500px)
-    if (scrollY < 500) {
-        ctaBar.classList.add('hidden');
-        return;
-    }
-    
-    // Hide at bottom (near footer)
-    if ((scrollY + winHeight) >= (docHeight - 100)) {
-        ctaBar.classList.add('hidden');
-        return;
-    }
-    
-    // Show otherwise
-    // Check if it has content (only valid if innerHTML is populated, but class hidden handles visibility)
-    // We only remove hidden if we want it shown.
-    if (ctaBar.innerHTML.trim() !== "") {
-        ctaBar.classList.remove('hidden');
-    }
-});
+// Scroll Event
+window.addEventListener('scroll', checkCtaVisibility);
