@@ -396,6 +396,41 @@
                         <div class="stage-grid" id="stageGroup">
                             <!-- JSで生成 -->
                         </div>
+                        <!-- キャスト・配信情報 -->
+                        <h4 style="margin-top:20px; border-bottom:1px solid #eee; padding-bottom:5px;">キャスト・配信・許諾</h4>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem;">実況者名</label>
+                                <input type="text" id="inpCasterName" placeholder="実況者名">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem;">実況アイコンURL</label>
+                                <input type="url" id="inpCasterIcon" placeholder="https://...">
+                            </div>
+                        </div>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem;">解説者名</label>
+                                <input type="text" id="inpComName" placeholder="解説者名">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem;">解説アイコンURL</label>
+                                <input type="url" id="inpComIcon" placeholder="https://...">
+                            </div>
+                        </div>
+                        <!-- 配信・許諾 -->
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                            <div>
+                                <label style="font-size:0.8rem;">配信担当</label>
+                                <input type="text" id="inpOpName" placeholder="配信担当者名">
+                            </div>
+                            <div>
+                                <label style="font-size:0.8rem;">任天堂許諾番号</label>
+                                <input type="text" id="inpLicense" placeholder="NJ...">
+                            </div>
+                        </div>
+
+                        <!-- 優勝チーム情報 -->
                     </div>
                 </div>
 
@@ -679,6 +714,14 @@
             document.getElementById('inpWinMem3').value = members[2] || '';
             document.getElementById('inpWinMem4').value = members[3] || '';
 
+            // Caster / License
+            document.getElementById('inpCasterName').value = t.caster?.name || '';
+            document.getElementById('inpCasterIcon').value = t.caster?.icon || '';
+            document.getElementById('inpComName').value = t.commentator?.name || '';
+            document.getElementById('inpComIcon').value = t.commentator?.icon || '';
+            document.getElementById('inpOpName').value = t.operator || '';
+            document.getElementById('inpLicense').value = t.license || '';
+
             modal.style.display = 'flex';
         };
 
@@ -734,7 +777,17 @@
                 xpLimit: xpData,
                 rules: selRules,
                 banStages: selStages,
-                updatedAt: new Date().toISOString()
+                updatedAt: new Date().toISOString(),
+                caster: {
+                    name: document.getElementById('inpCasterName').value,
+                    icon: document.getElementById('inpCasterIcon').value
+                },
+                commentator: {
+                    name: document.getElementById('inpComName').value,
+                    icon: document.getElementById('inpComIcon').value
+                },
+                operator: document.getElementById('inpOpName').value,
+                license: document.getElementById('inpLicense').value
             };
 
             const wTeam = document.getElementById('inpWinTeamName').value;

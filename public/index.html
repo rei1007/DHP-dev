@@ -1115,6 +1115,8 @@
             <div id="resMembers" class="res-members">
                 <!-- Members injected by JS -->
             </div>
+            <div id="resCastArea" style="margin:20px 0; padding-top:10px; border-top:1px solid #eee; font-size:0.9rem;">
+            </div>
             <a id="resLink" href="#" target="_blank" class="btn-cta"
                 style="width:100%; text-align:center; display:block; background:var(--c-primary);">結果の詳細を見る (X)</a>
         </div>
@@ -1162,13 +1164,31 @@
                     const sA = statusOrder[a.status] || 99;
                     const sB = statusOrder[b.status] || 99;
                     if (sA !== sB) return sA - sB;
+                    // Date Desc
                     const dA = a.eventDate ? new Date(a.eventDate).getTime() : 0;
                     const dB = b.eventDate ? new Date(b.eventDate).getTime() : 0;
                     return dB - dA;
                 });
 
+                // Filtering for Display
+                // Open & Upcoming: SHOW ALL
+                // Closed: Show limited number on mobile, more on desktop
+                const openTours = tournamentsData.filter(t => t.status === 'open');
+                const upcomingTours = tournamentsData.filter(t => t.status === 'upcoming');
+                const closedTours = tournamentsData.filter(t => t.status !== 'open' && t.status !== 'upcoming');
+
+                const isMobile = window.innerWidth < 768;
+                const closedLimit = isMobile ? 1 : 4;
+
+                // Combine
+                const displayList = [
+                    ...openTours,
+                    ...upcomingTours,
+                    ...closedTours.slice(0, closedLimit)
+                ];
+
                 let html = '';
-                tournamentsData.slice(0, 6).forEach(t => {
+                displayList.forEach(t => {
                     let statusClass = 'status-closed';
                     let statusText = '終了';
                     let borderColor = 'var(--border)';
@@ -1182,7 +1202,7 @@
                         statusText = '開催予定';
                     }
 
-                    // Date Format
+                    // Date
                     let dateDisplay = '-';
                     if (t.eventDate) {
                         const d = new Date(t.eventDate);
@@ -1191,30 +1211,43 @@
                         const day = ('0' + d.getDate()).slice(-2);
                         dateDisplay = `${y}.${m}.${day}`;
                     }
+
                     // Entry Period
                     let entryDisplay = '';
                     if (t.status === 'open' && t.entryEnd) {
                         const d = new Date(t.entryEnd);
                         const m = d.getMonth() + 1;
                         const day = d.getDate();
-                        entryDisplay = `~${m}/${day}`;
+                        const hours = ('0' + d.getHours()).slice(-2);
+                        const mins = ('0' + d.getMinutes()).slice(-2);
+                        entryDisplay = `~${m}/${day} ${hours}:${mins}`;
                     }
+
                     const rulesStr = (t.rules && t.rules.length > 0) ? t.rules.join(' / ') : 'ルール未定';
+                    const dateIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
                     const flagIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>`;
 
-                    // 日付表示アイコン
-                    const dateIcon = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>`;
+                    // Cast Info (List)
+                    let castInfo = '';
+                    if (t.caster && t.caster.name) {
+                        const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
+                        castInfo += `<div style="font-size:0.85rem; margin-top:4px; color:#4a5568;">🎙️ 実況: ${icon}${t.caster.name}</div>`;
+                    }
+                    if (t.commentator && t.commentator.name) {
+                        const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:20px; height:20px; border-radius:50%; vertical-align:middle; margin-right:4px;">` : '';
+                        castInfo += `<div style="font-size:0.85rem; margin-top:2px; color:#4a5568;">📝 解説: ${icon}${t.commentator.name}</div>`;
+                    }
 
-                    // アクションボタン/リンク
+                    // Action
                     let actionHtml = '';
                     if (t.status === 'open') {
                         actionHtml = `<a href="entry.html" class="btn-dash-nav" style="width:100%; text-align:center; margin-top:15px; background:var(--c-accent); color:white; border:none;">詳細・エントリー</a>`;
                     } else if (t.status === 'upcoming') {
                         actionHtml = `<span style="color:var(--c-text-muted); font-size:0.9rem; margin-top:15px;">情報は後日公開</span>`;
                     } else {
-                        // 終了した大会
-                        if (t.winner?.url) {
-                            actionHtml = `<a href="${t.winner.url}" target="_blank" style="color:var(--c-primary); font-size:0.9rem; text-decoration:underline;">結果を見る</a>`;
+                        // モーダルを開く条件：Win情報があるか
+                        if (t.winner?.team || t.winner?.url) {
+                            actionHtml = `<a href="javascript:void(0)" onclick="openResultModal('${t.id}'); return false;" style="color:var(--c-primary); font-size:0.9rem; text-decoration:underline;">結果を見る</a>`;
                         } else {
                             actionHtml = `<span style="color:var(--c-text-muted); font-size:0.9rem;">終了しました</span>`;
                         }
@@ -1227,10 +1260,11 @@
                             <div>
                                 <h3 class="tour-title">${t.name}</h3>
                                 <div class="tour-meta">
-                                    <div title="開催日">${dateIcon} ${dateDisplay}</div>
+                                    <div title="開催日" class="tour-date-stress">${dateIcon} ${dateDisplay}</div>
                                     <div title="ルール">${flagIcon} ${rulesStr}</div>
                                 </div>
-                                ${entryDisplay ? `<div style="margin-top:5px;"><span style="font-size:0.8rem; background:#edf2f7; color:#4a5568; padding:2px 8px; border-radius:4px;">エントリー ${entryDisplay}</span></div>` : ''}
+                                ${entryDisplay ? `<div style="margin-top:5px;"><span style="font-size:0.8rem; background:#edf2f7; color:#4a5568; padding:2px 8px; border-radius:4px;">エントリー <span class="tour-entry-stress">${entryDisplay}</span></span></div>` : ''}
+                                ${castInfo}
                             </div>
                             ${actionHtml}
                         </div>
@@ -1240,8 +1274,8 @@
 
                 tourGrid.innerHTML = html;
 
-                // CTAバーの更新（もし開催中の大会があれば）
-                updateCtaBar(snapshot);
+                // CTAバーの更新
+                updateCtaBar(tournamentsData);
 
             } catch (e) {
                 console.error("Error loading tournaments:", e);
@@ -1252,13 +1286,25 @@
             const ctaBar = document.getElementById('ctaBar');
             if (!ctaBar) return;
 
-            // Find first Open tournament
-            const openTour = data.find(t => t.status === 'open');
+            // Find Open tournaments
+            const openTours = data.filter(t => t.status === 'open');
 
-            if (openTour) {
+            let targetTour = null;
+
+            if (openTours.length > 0) {
+                // Sort by entryEnd ASC
+                openTours.sort((a, b) => {
+                    const tA = a.entryEnd ? new Date(a.entryEnd).getTime() : 9999999999999;
+                    const tB = b.entryEnd ? new Date(b.entryEnd).getTime() : 9999999999999;
+                    return tA - tB;
+                });
+                targetTour = openTours[0];
+            }
+
+            if (targetTour) {
                 let periodStr = '';
-                if (openTour.entryEnd) {
-                    const d = new Date(openTour.entryEnd);
+                if (targetTour.entryEnd) {
+                    const d = new Date(targetTour.entryEnd);
                     const m = d.getMonth() + 1;
                     const day = d.getDate();
                     const hours = ('0' + d.getHours()).slice(-2);
@@ -1271,21 +1317,21 @@
                         <span style="font-weight:700; color:var(--c-primary);">エントリー受付中</span>
                         <span style="font-size:0.9rem; color:#e53e3e; font-weight:bold;">${periodStr}</span>
                     </div>
-                    <div style="font-size:0.9rem; margin-bottom:10px;">${openTour.name}</div>
+                    <div style="font-size:0.9rem; margin-bottom:10px;">${targetTour.name}</div>
                     <a href="entry.html" class="btn-cta">エントリー</a>
                 `;
-                ctaBar.classList.remove('hidden');
+                ctaBar.style.display = 'block'; // Data exists -> Show (Observer handles hidden class)
             } else {
-                ctaBar.style.display = 'none';
+                ctaBar.style.display = 'none'; // No data -> Hide
             }
         }
 
         // Modal Logic
         window.openResultModal = (id) => {
             const t = tournamentsData.find(x => x.id === id);
-            if (!t || !t.winner) return;
+            if (!t || (!t.winner && !t.caster)) return; // winnerなくてもcasterあれば出す？一応winnerチェック緩める
 
-            const w = t.winner;
+            const w = t.winner || {};
             const modal = document.getElementById('resModal');
             document.getElementById('resTeam').textContent = w.team || 'Unknown Team';
             document.getElementById('resUniv').textContent = w.univ || '-';
@@ -1314,6 +1360,33 @@
             } else {
                 memArea.innerHTML = `<span style="color:#a0aec0; grid-column:span 2;">メンバー情報なし</span>`;
             }
+
+            // Cast Info
+            const castArea = document.getElementById('resCastArea');
+            let castHtml = '';
+
+            // Caster
+            if (t.caster && t.caster.name) {
+                const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; margin-right:5px;">` : '';
+                castHtml += `<div style="display:flex; align-items:center; margin-bottom:5px;"><strong>実況:</strong> <span style="margin-left:8px; display:flex; align-items:center;">${icon}${t.caster.name}</span></div>`;
+            }
+            // Commentator
+            if (t.commentator && t.commentator.name) {
+                const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:24px; height:24px; border-radius:50%; object-fit:cover; margin-right:5px;">` : '';
+                castHtml += `<div style="display:flex; align-items:center; margin-bottom:5px;"><strong>解説:</strong> <span style="margin-left:8px; display:flex; align-items:center;">${icon}${t.commentator.name}</span></div>`;
+            }
+
+            // Operator
+            if (t.operator) {
+                castHtml += `<div style="margin-bottom:5px;"><strong>配信:</strong> ${t.operator}</div>`;
+            }
+
+            // License
+            if (t.license) {
+                castHtml += `<div style="margin-top:10px; font-size:0.75rem; color:#a0aec0;">許諾番号: ${t.license}</div>`;
+            }
+
+            castArea.innerHTML = castHtml;
 
             // Link
             const linkBtn = document.getElementById('resLink');
