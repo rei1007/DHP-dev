@@ -992,7 +992,7 @@
             }
         };
 
-        window.toggleNewsType = () => {
+        window.toggleNewsType = async () => {
             const type = document.querySelector('input[name="newsType"]:checked').value;
             if (type === 'tournament') {
                 document.getElementById('newsTypeTour').style.display = 'block';
@@ -1000,6 +1000,13 @@
 
                 // Populate Tournament Dropdown
                 const sel = document.getElementById('inpNewsTourId');
+
+                // Ensure data exists
+                if (tournaments.length === 0) {
+                    sel.innerHTML = '<option>Loading...</option>';
+                    await loadData();
+                }
+
                 sel.innerHTML = '<option value="">大会を選択してください</option>';
                 tournaments.forEach(t => {
                     const opt = document.createElement('option');
