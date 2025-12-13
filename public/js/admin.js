@@ -212,6 +212,7 @@ window.editItem = (id) => {
     document.getElementById('inpEntryStart').value = t.entryStart || '';
     document.getElementById('inpEntryEnd').value = t.entryEnd || '';
     document.getElementById('inpRulesUrl').value = t.rulesUrl || '';
+    document.getElementById('inpSupportUrl').value = t.supportUrl || '';
     document.getElementById('inpEntryType').value = t.entryType || 'circle_only';
     
     // Toggle Dual Inputs
@@ -329,6 +330,7 @@ editForm.addEventListener('submit', async (e) => {
             entryStart: document.getElementById('inpEntryStart').value,
             entryEnd: document.getElementById('inpEntryEnd').value,
             rulesUrl: document.getElementById('inpRulesUrl').value,
+            supportUrl: document.getElementById('inpSupportUrl').value,
             entryType: document.getElementById('inpEntryType').value,
             xpLimit: xp,
             rules: rules,
