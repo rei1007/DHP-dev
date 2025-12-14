@@ -1,22 +1,15 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const firebaseConfig = {
-    apiKey: "AIzaSyCaVNHlJBoWcn9BQd7jPFtELxsOLHCZdv0",
-    authDomain: "daigakuhai.firebaseapp.com",
-    projectId: "daigakuhai",
-    storageBucket: "daigakuhai.firebasestorage.app",
-    messagingSenderId: "1003642519018",
-    appId: "1:1003642519018:web:2700931b9f1c451ec74693"
-};
+// Supabase設定
+// 以下の値をSupabase管理画面からコピーしてください
+const SUPABASE_URL = 'https://cbhfbykyymwhlrnoykvp.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiaGZieWt5eW13aGxybm95a3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1NTg3NDIsImV4cCI6MjA4MTEzNDc0Mn0.mNv-zBLRk2XdFs81GMWysH4ooE2V18wJWnD-BFqNtVg';
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
-export const auth = getAuth(app);
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export function parseMarkdown(text) {
     if (!text) return '';
+// ... (keep creating logic)
     // Nested logic: Bold/Italic first, then Link, then List?
     // Regex is tricky for nested. Alternative:
     // 1. Headers

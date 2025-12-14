@@ -1,5 +1,4 @@
-import { db, setupResModal, generateTourCard } from "./common.js";
-import { collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { supabase, setupResModal, generateTourCard } from "./common.js";
 
 // グローバル状態
 let allTournaments = [];
@@ -17,9 +16,28 @@ async function loadTournaments() {
     list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">Loading...</div>';
 
     try {
-        const q = query(collection(db, "tournaments"), orderBy("eventDate", "desc"));
-        const snapshot = await getDocs(q);
-        allTournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        // Supabaseから取得
+        // カラム名はPostgresの仕様(小文字)とadmin.jsの送信(キャメル)の不一致を防ぐため
+        // select('*') で返る実際のキーを使うよう注意
+        const { data, error } = await supabase
+            .from('tournaments')
+            .select('*')
+            // eventDate or eventdate の並び替え。
+            // Supabaseでは .order('eventDate',...) でカラムが存在すればOK。
+            // ここではJS側でソートしているので、単純に全件取得してからソート推奨
+            .select('*');
+
+        if (error) throw error;
+
+        allTournaments = data.map(doc => {
+            // カラム名の揺らぎ吸収 (camelCase vs lowercase)
+            return {
+                ...doc,
+                eventDate: doc.eventDate || doc.eventdate,
+                entryEnd: doc.entryEnd || doc.entryend,
+                entryStart: doc.entryStart || doc.entrystart
+            };
+        });
 
         // モーダル用にグローバル保存 (handleTourClickで使用)
         window._tournamentsData = allTournaments;
@@ -87,7 +105,7 @@ function renderTourList() {
         displayTours = sortedTours.slice(0, 6);
     }
     
-    // 表示用に再ソート (マージロジック後の順序維持: ステータス > 日付)
+    // 表示用に再ソート
     displayTours.sort((a, b) => {
         const sA = statusOrder[a.status] || 99;
         const sB = statusOrder[b.status] || 99;
@@ -158,7 +176,7 @@ function updateCtaBar(data) {
         `;
         checkCtaVisibility(); // 初期チェック
     } else {
-        ctaBar.innerHTML = ''; // コンテンツをクリアして非表示を維持
+        ctaBar.innerHTML = ''; 
         ctaBar.classList.add('hidden');
     }
 }
@@ -199,15 +217,26 @@ async function loadIndexNews() {
     const heroNewsContainer = document.getElementById('heroNewsContainer');
 
     try {
-        const q = query(collection(db, "news"), orderBy("date", "desc"), limit(5));
-        const snapshot = await getDocs(q);
+        // Supabase query
+        // order by publishedAt (admin.js sets this)
+        // or publishedat
+        const { data, error } = await supabase
+            .from('news')
+            .select('*')
+            .order('publishedAt', { ascending: false })
+            .limit(5);
+
+        if (error) throw error;
         
-        if (snapshot.empty) {
+        const news = data.map(n => ({
+            ...n,
+            date: n.publishedAt || n.publishedat || n.date // normalize to 'date' for display logic
+        }));
+
+        if (news.length === 0) {
             if (newsList) newsList.innerHTML = '<div style="padding:20px; text-align:center; color:#a0aec0;">お知らせはありません</div>';
         }
         
-        const news = snapshot.empty ? [] : snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
         // ヒーローニュース (最新1件)
         const latest = news[0];
         if (latest && heroNewsContainer) {
@@ -221,7 +250,7 @@ async function loadIndexNews() {
             heroNewsContainer.innerHTML = `
             <a href="news_detail.html?id=${latest.id}" class="news-card-hero">
                 <span class="badge-news-hero">${badgeText}</span>
-                <span style="color:#cbd5e0; font-family:var(--f-eng); font-size:0.85rem;">${latest.date.replace(/-/g, '.')}</span>
+                <span style="color:#cbd5e0; font-family:var(--f-eng); font-size:0.85rem;">${(latest.date || '').replace(/-/g, '.')}</span>
                 <span class="news-hero-title">${latest.title}</span>
             </a>
             `;
@@ -242,7 +271,7 @@ async function loadIndexNews() {
                 html += `
                 <a href="news_detail.html?id=${n.id}" class="news-item">
                     <div class="news-meta">
-                        <span class="news-date">${n.date.replace(/-/g, '.')}</span>
+                        <span class="news-date">${(n.date || '').replace(/-/g, '.')}</span>
                         <span class="news-cat ${badgeClass}">${badgeText}</span>
                     </div>
                     <div class="news-item-title">${n.title}</div>
