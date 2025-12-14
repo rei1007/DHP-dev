@@ -11,7 +11,6 @@
         href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Oswald:wght@500&family=Shippori+Mincho:wght@700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="css/common.css">
-    <link rel="stylesheet" href="css/index.css">
     <link rel="stylesheet" href="css/news.css">
 </head>
 
@@ -27,14 +26,12 @@
         </div>
     </header>
 
-    <div class="news-page container">
+    <div class="container news-page">
         <h1 class="page-title">News</h1>
-        <div class="n-list" id="nList">
-            <div class="loader">Loading...</div>
+        <div class="news-list-container" id="nList">
+            <div class="loader" style="text-align:center; padding:40px; color:#718096;">Loading...</div>
         </div>
     </div>
-
-    <!-- Modal Removed -->
 
     <footer id="footer" class="footer">
         <div class="container">
@@ -46,14 +43,19 @@
                 <a href="admin.html" target="_blank">運営ダッシュボード</a>
             </div>
 
-            <p style="margin-top:40px; font-size:0.8rem; color:#718096;">&copy; 2025 Inkollege Student Cup.</p>
+            <p class="u-mt-20 u-text-xs u-text-gray">&copy; 2025 Inkollege Student Cup.</p>
         </div>
     </footer>
 
     <script type="module" src="js/news.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            document.querySelectorAll('.news-item, .page-title').forEach(el => el.classList.add('fade-up'));
+            // アイテム描画をJSで待つ必要がある？
+            // もしくはコンテナに fade-up を追加するか。
+            // 前のスクリプトは動的要素の .news-item に追加していた。
+            // 非同期ロードされるので、このスクリプトでは捕捉できない可能性がある。
+            // page-title は静的なのでOK。
+            document.querySelector('.page-title').classList.add('fade-up');
         });
     </script>
 </body>

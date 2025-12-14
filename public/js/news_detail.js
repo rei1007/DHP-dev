@@ -22,12 +22,12 @@ async function loadDetail() {
             const data = docSnap.data();
             render(data);
         } else {
-            // Check if tournament
+            // 大会かどうか確認
             const tourRef = doc(db, "tournaments", id);
             const tourSnap = await getDoc(tourRef);
             if (tourSnap.exists()) {
                 const t = tourSnap.data();
-                // Render Tournament as News
+                // 大会をニュースとしてレンダリング
                 renderTourAsNews(id, t);
             } else {
                 container.innerHTML = '<p style="text-align:center; padding:40px;">記事が見つかりません</p>';
@@ -43,7 +43,7 @@ async function loadDetail() {
 
 async function render(data) {
     let badgeText = 'お知らせ';
-    // Badge Logic
+    // バッジロジック
     if (data.type === 'tournament') { badgeText = '大会情報'; }
     else if (data.badge === 'important') { badgeText = '重要'; }
     else if (data.badge === 'recruit') { badgeText = '募集'; }
@@ -54,7 +54,7 @@ async function render(data) {
     else if (data.badge === 'important' || data.badge === 'penalty') badgeStyle = "background:#e53e3e; color:white;";
     else if (data.badge === 'recruit') badgeStyle = "background:#38a169; color:white;";
 
-    // Check for linked tournament
+    // リンクされた大会を確認
     let tourInfoHtml = '';
     if (data.type === 'tournament' && data.refTourId) {
         try {
@@ -62,44 +62,44 @@ async function render(data) {
             if (tSnap.exists()) {
                 const t = tSnap.data();
                 
-                // --- Rich Components ---
+                // --- リッチコンポーネント ---
 
-                // XP Bar
+                // XPバー
                 let xpDisplay = '';
                 if (!t.xpLimit || t.xpLimit === 'none' || (t.xpLimit.avg === 0 && t.xpLimit.max === 0)) {
                      xpDisplay = '<div style="background:#f7fafc; padding:10px; border-radius:6px; border:1px solid #edf2f7; font-size:0.9rem; font-weight:bold; color:#4a5568;">XP制限なし</div>';
                 } else {
                     xpDisplay = `
-                    <div style="background:#f7fafc; padding:15px; border-radius:8px; border:1px solid #edf2f7;">
-                        <div style="font-weight:bold; color:#2d3748; margin-bottom:8px; font-size:0.95rem;">XP制限</div>
+                    <div class="rich-xp-box">
+                        <div class="rich-xp-title">XP制限</div>
                         <div style="display:flex; justify-content:space-between; font-size:0.9rem; margin-bottom:8px;">
                             <span>平均: <strong>${t.xpLimit.avg}</strong> 以下</span>
                             <span>最高: <strong>${t.xpLimit.max}</strong> 以下</span>
                         </div>
-                        <div style="width:100%; height:10px; background:#e2e8f0; border-radius:5px; overflow:hidden;">
-                            <div style="width:80%; height:100%; background:linear-gradient(90deg, #4299e1 0%, #667eea 100%);"></div>
+                        <div class="rich-xp-bar">
+                            <div style="width:80%;"></div>
                         </div>
                     </div>`;
                 }
 
-                // Cast
+                // キャスト
                 let castHtml = '';
                 if (t.caster?.name || t.commentator?.name) {
-                    castHtml += '<div style="margin-top:25px; margin-bottom:15px; font-size:1.1rem; font-weight:bold; color:#2d3748; border-left:4px solid #b7791f; padding-left:12px;">実況・解説</div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:15px;">';
+                    castHtml += '<div style="margin-top:25px; margin-bottom:15px; font-size:1.1rem; font-weight:bold; color:#2d3748; border-left:4px solid #b7791f; padding-left:12px;">実況・解説</div><div class="rich-cast-grid">';
                     
                     const renderCastCard = (role, p) => {
                         if (!p || !p.name) return '';
-                        const icon = p.icon ? `<img src="${p.icon}" style="width:50px; height:50px; border-radius:50%; object-fit:cover; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.1);">` : '<div style="width:50px;height:50px;background:#edf2f7;border-radius:50%;"></div>';
+                        const icon = p.icon ? `<img src="${p.icon}">` : '<div style="width:50px;height:50px;background:#edf2f7;border-radius:50%;"></div>';
                         let links = '';
-                        if (p.x) links += `<a href="https://twitter.com/${p.x.replace('@', '')}" target="_blank" style="color:#1da1f2; background:#ebf8ff; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; text-decoration:none;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`;
-                        if (p.yt) links += `<a href="${p.yt}" target="_blank" style="color:#ff0000; background:#fff5f5; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; text-decoration:none;"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>`;
+                        if (p.x) links += `<a href="https://twitter.com/${p.x.replace('@', '')}" target="_blank" class="rich-cast-link x"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`;
+                        if (p.yt) links += `<a href="${p.yt}" target="_blank" class="rich-cast-link yt"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>`;
                         
                         return `
-                        <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:10px; display:flex; align-items:center; gap:15px; box-shadow:0 2px 5px rgba(0,0,0,0.03);">
+                        <div class="rich-cast-card">
                             ${icon}
                             <div style="flex:1;">
-                                <div style="font-size:0.75rem; color:#718096; font-weight:bold; margin-bottom:2px; text-transform:uppercase; letter-spacing:0.05em;">${role}</div>
-                                <div style="font-weight:bold; color:#1a202c; font-size:1.05rem;">${p.name}</div>
+                                <div class="role">${role}</div>
+                                <div class="name">${p.name}</div>
                             </div>
                             <div style="display:flex; gap:8px;">${links}</div>
                         </div>`;
@@ -110,26 +110,26 @@ async function render(data) {
                     castHtml += '</div>';
                 }
 
-                // Dates
+                // 日付
                 const d = t.eventDate ? new Date(t.eventDate) : null;
                 const dStr = d ? `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ${(d.getHours()+'').padStart(2,'0')}:${(d.getMinutes()+'').padStart(2,'0')}` : '未定';
                 
                 const entryEnd = t.entryEnd ? new Date(t.entryEnd) : null;
                 const entryEndStr = entryEnd ? `${entryEnd.getMonth()+1}/${entryEnd.getDate()} ${(entryEnd.getHours()+'').padStart(2,'0')}:${(entryEnd.getMinutes()+'').padStart(2,'0')}` : '-';
 
-                // Rules
+                // ルール
                 const rulesStr = t.rules ? t.rules.map(r => `<span style="display:inline-block; background:#edf2f7; padding:2px 8px; border-radius:4px; margin-right:5px; font-size:0.85rem;">${r}</span>`).join('') : '未定';
 
-                // License
+                // ライセンス
                 const licenseHtml = t.license ? `<div style="font-size:0.8rem; color:#718096; text-align:center; margin-top:20px;">任天堂許諾番号: ${t.license}<br>当大会は任天堂の協賛‧提携を受けたものではありません。<br><a href="https://www.nintendo.co.jp/tournament_guideline/index.html" target="_blank" style="color:#718096; text-decoration:underline;">コミュニティ大会ガイドライン</a>に基づき運営されます。<br><a href="https://www.nintendo.co.jp/tournament_guideline/rules.html" target="_blank" style="color:#718096; text-decoration:underline;">コミュニティ大会への出場および観戦に関する規約</a>を遵守してください。</div>` : '';
 
 
-                // Construction of Rich Overview
+                // リッチ概要の構築
                 tourInfoHtml = `
-                <div style="margin-top:50px; border-top:2px solid #edf2f7; padding-top:40px;">
+                <div class="rich-overview">
                     <h2 style="font-size:1.5rem; font-weight:800; margin-bottom:30px; font-family:var(--f-jp);">大会概要</h2>
                     
-                    <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:25px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                    <div class="rich-overview-box">
                         
                         <!-- Schedule -->
                         <div style="margin-bottom:25px; text-align:center;">
@@ -184,10 +184,10 @@ async function render(data) {
         <h1 class="nd-title">${data.title}</h1>
     </div>
     <div class="nd-content" style="padding-bottom:60px;">
-        <!-- Markdown Content First -->
+        <!-- Markdownコンテンツを先に -->
         ${parseMarkdown(data.body)}
         
-        <!-- Rich Overview Next -->
+        <!-- リッチ概要を次に -->
         ${tourInfoHtml}
     </div>
     `;
@@ -195,62 +195,62 @@ async function render(data) {
 }
 
 function renderTourAsNews(tid, t) {
-    // Determine status
+    // ステータス判定
     // ...
-    // Just minimal render
-    // XP Bar or Label
+    // 最小限のレンダリング
+    // XPバーまたはラベル
     let xpDisplay = '';
     if (t.xpLimit === 'none' || !t.xpLimit) {
         xpDisplay = '<span style="background:#e2e8f0; color:#4a5568; padding:4px 8px; border-radius:4px; font-size:0.85rem;">XP制限なし</span>';
     } else {
         xpDisplay = `
-        <div style="margin-top:10px; background:#f7fafc; padding:10px; border-radius:6px; border:1px solid #edf2f7;">
-            <div style="font-weight:bold; color:#2d3748; margin-bottom:5px; font-size:0.9rem;">XP制限</div>
+        <div class="rich-xp-box" style="margin-top:10px;">
+            <div class="rich-xp-title">XP制限</div>
             <div style="display:flex; gap:15px; font-size:0.9rem;">
                 <div><strong>平均:</strong> ${t.xpLimit.avg}以下</div>
                 <div><strong>最高:</strong> ${t.xpLimit.max}以下</div>
             </div>
-            <div style="width:100%; height:8px; background:#e2e8f0; border-radius:4px; margin-top:8px; overflow:hidden;">
-                <div style="width:70%; height:100%; background:linear-gradient(90deg, #63b3ed 0%, #4299e1 100%);"></div>
+            <div class="rich-xp-bar" style="margin-top:8px;">
+                <div style="width:70%;"></div>
             </div>
         </div>
         `;
     }
 
-    // Cast Cards
+    // キャストカード
     let castHtml = '';
     if (t.caster || t.commentator) {
-        castHtml += '<div style="margin-top:20px; font-weight:bold; margin-bottom:10px; font-size:1.1rem; border-left:3px solid #b7791f; padding-left:10px;">実況・解説</div><div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(250px, 1fr)); gap:15px;">';
+        castHtml += '<div style="margin-top:20px; font-weight:bold; margin-bottom:10px; font-size:1.1rem; border-left:3px solid #b7791f; padding-left:10px;">実況・解説</div><div class="rich-cast-grid">';
         
         if (t.caster && t.caster.name) {
-            const icon = t.caster.icon ? `<img src="${t.caster.icon}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : '<div style="width:40px;height:40px;background:#edf2f7;border-radius:50%;"></div>';
+            const icon = t.caster.icon ? `<img src="${t.caster.icon}">` : '<div style="width:40px;height:40px;background:#edf2f7;border-radius:50%;"></div>';
             let links = '';
-            if (t.caster.x) links += `<a href="https://twitter.com/${t.caster.x.replace('@', '')}" target="_blank" style="color:#1da1f2;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`;
-            if (t.caster.yt) links += `<a href="${t.caster.yt}" target="_blank" style="color:#ff0000;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>`;
+            if (t.caster.x) links += `<a href="https://twitter.com/${t.caster.x.replace('@', '')}" target="_blank" class="rich-cast-link x"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`;
+            if (t.caster.yt) links += `<a href="${t.caster.yt}" target="_blank" class="rich-cast-link yt"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>`;
             
             castHtml += `
-            <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:8px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div class="rich-cast-card">
                 ${icon}
                 <div style="flex:1;">
-                    <div style="font-size:0.75rem; color:#718096; font-weight:bold; margin-bottom:2px;">実況</div>
-                    <div style="font-weight:bold; color:#2d3748;">${t.caster.name}</div>
+                    <div class="role">実況</div>
+                    <div class="name">${t.caster.name}</div>
                 </div>
                 <div style="display:flex; gap:8px;">${links}</div>
             </div>`;
         }
 
         if (t.commentator && t.commentator.name) {
-            const icon = t.commentator.icon ? `<img src="${t.commentator.icon}" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">` : '<div style="width:40px;height:40px;background:#edf2f7;border-radius:50%;"></div>';
+            const icon = t.commentator.icon ? `<img src="${t.commentator.icon}">` : '<div style="width:40px;height:40px;background:#edf2f7;border-radius:50%;"></div>';
             let links = '';
-            if (t.commentator.x) links += `<a href="https://twitter.com/${t.commentator.x.replace('@', '')}" target="_blank" style="color:#1da1f2;"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`;
-            if (t.commentator.yt) links += `<a href="${t.commentator.yt}" target="_blank" style="color:#ff0000;"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>`;
+            if (t.commentator.x) links += `<a href="https://twitter.com/${t.commentator.x.replace('@', '')}" target="_blank" class="rich-cast-link x"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>`;
+            if (t.commentator.yt) links += `<a href="${t.commentator.yt}" target="_blank" class="rich-cast-link yt"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg></a>`;
             
             castHtml += `
-            <div style="background:white; border:1px solid #e2e8f0; padding:15px; border-radius:8px; display:flex; align-items:center; gap:12px; box-shadow:0 1px 3px rgba(0,0,0,0.05);">
+            <div class="rich-cast-card">
                 ${icon}
                 <div style="flex:1;">
-                    <div style="font-size:0.75rem; color:#718096; font-weight:bold; margin-bottom:2px;">解説</div>
-                    <div style="font-weight:bold; color:#2d3748;">${t.commentator.name}</div>
+                    <div class="role">解説</div>
+                    <div class="name">${t.commentator.name}</div>
                 </div>
                 <div style="display:flex; gap:8px;">${links}</div>
             </div>`;
@@ -281,7 +281,5 @@ function renderTourAsNews(tid, t) {
     `;
     container.innerHTML = html;
 }
-
-
 
 loadDetail();

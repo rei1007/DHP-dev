@@ -1,43 +1,47 @@
-/* Page specific styles for Admin */
+/* 管理画面用スタイル */
+
 body {
     padding-bottom: 50px;
 }
 
+/* ログイン画面 */
 .login-wrapper {
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
+
+    & .card {
+        background: var(--c-surface);
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        border: var(--border);
+    }
+
+    & .login-card {
+        width: 100%;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    & .login-title {
+        margin-bottom: 2rem;
+        color: var(--c-primary);
+        font-size: 1.5rem;
+    }
 }
 
+/* ダッシュボードレイアウト */
 .dashboard-wrapper {
-    display: none;
+    /* 初期表示はHTML側で .u-hidden を付与 */
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
 
-.card {
-    background: var(--c-surface);
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    border: var(--border);
-}
-
-.login-card {
-    width: 100%;
-    max-width: 400px;
-    text-align: center;
-}
-
-.login-title {
-    margin-bottom: 2rem;
-    color: var(--c-primary);
-    font-size: 1.5rem;
-}
-
+/* フォーム要素 */
 input,
 select,
 textarea {
@@ -50,6 +54,7 @@ textarea {
     font-family: inherit;
 }
 
+/* ボタン */
 .btn {
     background: var(--c-primary);
     color: white;
@@ -60,46 +65,59 @@ textarea {
     font-weight: bold;
     font-size: 1rem;
     width: 100%;
-    /* Mobile friendly */
-}
+    transition: opacity 0.2s;
 
-@media (min-width: 600px) {
-    .btn {
+    &:hover {
+        opacity: 0.9;
+    }
+
+    @media (min-width: 600px) {
         width: auto;
+    }
+
+    &.btn-green {
+        background: var(--c-accent);
+    }
+
+    &.btn-red {
+        background: var(--c-danger);
+        color: white;
+    }
+
+    &.btn-sm {
+        padding: 6px 12px;
+        font-size: 0.9rem;
+        width: auto;
+        margin-left: 5px;
     }
 }
 
-.btn:hover {
-    opacity: 0.9;
+/* タブボタン */
+.tab-btn {
+    background: transparent;
+    border: 1px solid #cbd5e0;
+    color: #4a5568;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    font-weight: bold;
+
+    &.is-active {
+        background: var(--c-primary);
+        color: white;
+        border-color: var(--c-primary);
+    }
 }
 
-.btn-green {
-    background: var(--c-accent);
-}
-
-.btn-red {
-    background: var(--c-danger);
-    color: white;
-}
-
-.btn-sm {
-    padding: 6px 12px;
-    font-size: 0.9rem;
-    width: auto;
-    margin-left: 5px;
-}
-
-/* Dashboard Layout */
+/* ダッシュボードヘッダー */
 .dash-header {
     display: flex;
     flex-direction: column;
     gap: 15px;
     margin-bottom: 30px;
     text-align: center;
-}
 
-@media (min-width: 600px) {
-    .dash-header {
+    @media (min-width: 600px) {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
@@ -107,38 +125,43 @@ textarea {
     }
 }
 
+/* 大会リスト */
 .tournament-list {
     display: grid;
     gap: 20px;
-}
 
-.t-item {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    border: var(--border);
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+    & .t-item {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        border: var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
 
-@media (min-width: 600px) {
-    .t-item {
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
+        @media (min-width: 600px) {
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        & .t-info h3 {
+            margin-bottom: 5px;
+            color: var(--c-primary);
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        & .t-status {
+            font-size: 0.85rem;
+            color: #718096;
+        }
     }
 }
 
-.t-info h3 {
-    margin-bottom: 5px;
-    color: var(--c-primary);
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
+/* ステータスバッジ */
 .status-badge {
     font-size: 0.75rem;
     padding: 2px 8px;
@@ -146,21 +169,17 @@ textarea {
     color: white;
     background: #718096;
     white-space: nowrap;
+
+    &.status-open {
+        background: var(--c-accent);
+    }
+
+    &.status-upcoming {
+        background: var(--c-gold);
+    }
 }
 
-.status-open {
-    background: var(--c-accent);
-}
-
-.status-upcoming {
-    background: var(--c-gold);
-}
-
-.t-status {
-    font-size: 0.85rem;
-    color: #718096;
-}
-
+/* モーダル */
 .modal {
     position: fixed;
     top: 0;
@@ -169,25 +188,28 @@ textarea {
     height: 100%;
     background: rgba(0, 0, 0, 0.5);
     display: none;
+    /* デフォルト非表示 */
     align-items: center;
     justify-content: center;
     z-index: 1000;
     padding: 10px;
-}
 
-.modal-content {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    width: 100%;
-    max-width: 900px;
-    max-height: 90vh;
-    overflow-y: auto;
-}
+    &.is-active {
+        display: flex;
+    }
 
-@media (min-width: 600px) {
-    .modal-content {
-        padding: 30px;
+    & .modal-content {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 900px;
+        max-height: 90vh;
+        overflow-y: auto;
+
+        @media (min-width: 600px) {
+            padding: 30px;
+        }
     }
 }
 
@@ -195,14 +217,13 @@ textarea {
     display: grid;
     grid-template-columns: 1fr;
     gap: 20px;
-}
 
-@media (min-width: 768px) {
-    .modal-grid {
+    @media (min-width: 768px) {
         grid-template-columns: 1fr 1fr;
     }
 }
 
+/* 共通コンポーネント */
 .loading-mask {
     position: fixed;
     inset: 0;
@@ -213,33 +234,56 @@ textarea {
     font-weight: bold;
 }
 
-/* Custom Input Groups */
+.box-light {
+    background: #f7fafc;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+/* フォーム関連 */
+.section-label {
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    border-bottom: 1px solid #edf2f7;
+    padding-bottom: 5px;
+}
+
+.form-label-bold {
+    font-weight: bold;
+    color: #4a5568;
+    display: block;
+    margin-bottom: 5px;
+}
+
 .checkbox-group {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-bottom: 15px;
-}
 
-.checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    background: #edf2f7;
-    padding: 5px 10px;
-    border-radius: 4px;
-}
+    & .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        background: #edf2f7;
+        padding: 5px 10px;
+        border-radius: 4px;
 
-.checkbox-label input {
-    width: auto;
-    margin: 0;
-}
+        & input {
+            width: auto;
+            margin: 0;
+        }
 
-.checkbox-label:has(input:checked) {
-    background: #bee3f8;
-    color: var(--c-primary);
+        &:has(input:checked) {
+            background: #bee3f8;
+            color: var(--c-primary);
+        }
+    }
 }
 
 .stage-grid {
@@ -259,15 +303,15 @@ fieldset {
     border-radius: 6px;
     padding: 15px;
     margin-bottom: 20px;
+
+    & legend {
+        padding: 0 10px;
+        font-weight: bold;
+        color: var(--c-primary);
+    }
 }
 
-legend {
-    padding: 0 10px;
-    font-weight: bold;
-    color: var(--c-primary);
-}
-
-/* Badge Styles */
+/* ニュースバッジ */
 .news-cat {
     font-size: 0.7rem;
     padding: 2px 8px;
@@ -278,24 +322,24 @@ legend {
     display: inline-block;
     font-weight: bold;
     margin-right: 8px;
-}
 
-.news-cat.badge-important {
-    background: #e53e3e;
-    color: white;
-}
+    &.badge-important {
+        background: #e53e3e;
+        color: white;
+    }
 
-.news-cat.badge-recruit {
-    background: #38a169;
-    color: white;
-}
+    &.badge-recruit {
+        background: #38a169;
+        color: white;
+    }
 
-.news-cat.badge-info {
-    background: #2b6cb0;
-    color: white;
-}
+    &.badge-info {
+        background: #2b6cb0;
+        color: white;
+    }
 
-.news-cat.status-upcoming {
-    background: #b7791f;
-    color: white;
+    &.status-upcoming {
+        background: #b7791f;
+        color: white;
+    }
 }

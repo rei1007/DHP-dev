@@ -1,109 +1,92 @@
-/* Page specific styles for Privacy Policy */
+/* プライバシーポリシーページ用スタイル */
 
-/* Header */
-.header {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    z-index: 1000;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    border-bottom: var(--border);
-}
-
-.header-inner {
-    height: 70px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.brand img {
-    height: 50px;
-}
-
-/* Privacy Content */
+/* プライバシーコンテンツ */
 .privacy-container {
     padding-top: 120px;
     padding-bottom: 80px;
     max-width: 800px;
     margin: 0 auto;
+
+    & .page-title {
+        font-size: 2rem;
+        color: var(--c-primary);
+        margin-bottom: 40px;
+        text-align: center;
+        font-weight: 700;
+    }
+
+    & .privacy-content {
+        background: white;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: var(--shadow-sm);
+        border: var(--border);
+
+        & h2 {
+            font-size: 1.4rem;
+            color: var(--c-primary);
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+            margin: 40px 0 20px;
+
+            &:first-child {
+                margin-top: 0;
+            }
+        }
+
+        & h3 {
+            font-size: 1.15rem;
+            color: var(--c-text-main);
+            margin: 30px 0 15px;
+            font-weight: 700;
+        }
+
+        & p {
+            margin-bottom: 1.5rem;
+            color: var(--c-text-main);
+            line-height: 1.6;
+        }
+
+        & ul {
+            margin-bottom: 1.5rem;
+            padding-left: 1.5rem;
+
+            & li {
+                margin-bottom: 0.5rem;
+            }
+        }
+    }
 }
 
-.page-title {
-    font-size: 2rem;
-    color: var(--c-primary);
-    margin-bottom: 40px;
-    text-align: center;
-    font-weight: 700;
-}
-
-.privacy-content {
-    background: white;
-    padding: 40px;
-    border-radius: 8px;
-    box-shadow: var(--shadow-sm);
-    border: var(--border);
-}
-
-.privacy-content h2 {
-    font-size: 1.4rem;
-    color: var(--c-primary);
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 10px;
-    margin: 40px 0 20px;
-}
-
-.privacy-content h2:first-child {
-    margin-top: 0;
-}
-
-.privacy-content p {
-    margin-bottom: 1.5rem;
-    color: var(--c-text-main);
-    line-height: good;
-}
-
-.privacy-content ul {
-    margin-bottom: 1.5rem;
-    padding-left: 1.5rem;
-}
-
-.privacy-content li {
-    margin-bottom: 0.5rem;
-}
-
-/* Back Link */
+/* 戻るリンク */
 .back-link {
     margin-top: 40px;
     text-align: center;
-}
 
-.back-link a {
-    display: inline-block;
-    padding: 10px 30px;
-    border: 1px solid var(--c-primary);
-    border-radius: 4px;
-    color: var(--c-primary);
-    font-weight: 500;
-    transition: 0.2s;
-}
+    & a {
+        display: inline-block;
+        padding: 10px 30px;
+        border: 1px solid var(--c-primary);
+        border-radius: 4px;
+        color: var(--c-primary);
+        font-weight: 500;
+        transition: 0.2s;
 
-.back-link a:hover {
-    background: var(--c-primary);
-    color: white;
+        &:hover {
+            background: var(--c-primary);
+            color: white;
+        }
+    }
 }
 
 @media (max-width: 600px) {
-    .privacy-content {
-        padding: 20px;
-    }
+    .privacy-container {
+        & .privacy-content {
+            padding: 20px;
+        }
 
-    .page-title {
-        font-size: 1.5rem;
+        & .page-title {
+            font-size: 1.5rem;
+        }
     }
 }

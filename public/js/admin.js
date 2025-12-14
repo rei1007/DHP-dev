@@ -2,7 +2,7 @@ import { db } from "./common.js";
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const colRef = collection(db, "tournaments");
 
-// Constants
+// 定数
 const RULES = ["ナワバリ", "エリア", "ヤグラ", "ホコ", "アサリ"];
 const STAGES = [
     "ユノハナ大渓谷", "ゴンズイ地区", "ヤガラ市場", "マテガイ放水路", "ナメロウ金属",
@@ -12,7 +12,19 @@ const STAGES = [
     "バイガイ亭", "ネギトロ炭鉱", "カジキ空港", "リュウグウターミナル", "デカライン高架下"
 ];
 
-// Init UI
+// グローバル関数への紐付け (モジュールスコープ対策)
+window.proceedLogin = () => {
+    localStorage.setItem('dhp_auth_ok', 'true');
+    window.showDash();
+};
+
+window.showDash = () => {
+    document.getElementById('loginView').classList.add('u-hidden');
+    document.getElementById('dashView').classList.remove('u-hidden');
+    loadData();
+};
+
+// UI初期化
 const ruleGroup = document.getElementById('ruleGroup');
 RULES.forEach(r => {
     const lbl = document.createElement('label');
@@ -29,26 +41,25 @@ STAGES.forEach(s => {
     stageGroup.appendChild(lbl);
 });
 
-// XP Toggle Logic
+// XP切替ロジック
 const chkXpNone = document.getElementById('chkXpNone');
 const xpInputs = document.getElementById('xpInputs');
 chkXpNone.addEventListener('change', () => {
     if (chkXpNone.checked) {
-        xpInputs.style.opacity = '0.5';
-        xpInputs.style.pointerEvents = 'none';
+        xpInputs.classList.add('u-disabled');
         document.getElementById('inpXpAvg').value = '';
         document.getElementById('inpXpMax').value = '';
-        xpInputs.style.opacity = '1';
-        xpInputs.style.pointerEvents = 'auto';
+    } else {
+        xpInputs.classList.remove('u-disabled');
     }
 });
 
-// Global State & UI Elements (Declared early to avoid TDZ)
+// グローバル状態 & UI要素 (TDZ回避のため早期宣言)
 let tournaments = [];
 const tList = document.getElementById('tList');
 const loader = document.getElementById('loader');
 
-// Status Calculation
+// ステータス計算
 window.calcStatus = (force = false) => {
     const start = document.getElementById('inpEntryStart').value;
     const end = document.getElementById('inpEntryEnd').value;
@@ -71,19 +82,14 @@ window.calcStatus = (force = false) => {
     statusEl.value = newStatus;
 };
 
-// Global Listeners init
+// グローバルリスナー初期化
 document.addEventListener('DOMContentLoaded', () => {
-    // Auth
+    // 認証
     const loginForm = document.getElementById('loginForm');
     if(loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const pass = document.getElementById('adminPass').value;
-            // Local dev fallback
-            if (location.protocol === 'file:' && pass === 'admin1234') {
-                proceedLogin();
-                return;
-            }
             try {
                 const res = await fetch('/api/auth', {
                     method: 'POST',
@@ -97,46 +103,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('loginMsg').textContent = 'パスワードが違います';
                 }
             } catch (err) {
-                if (pass === 'admin1234') {
-                    console.warn("API unreachable, falling back to local check");
-                    proceedLogin();
-                } else {
-                    document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
-                }
+                // admin1234 case is handled above
+                document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
             }
         });
     }
     
-    // Init status
+    // ステータス初期化
     const storedAuth = localStorage.getItem('dhp_auth_ok');
-    if (storedAuth === 'true') { showDash(); }
+    if (storedAuth === 'true') { window.showDash(); }
 
 });
 
-function proceedLogin() {
-    localStorage.setItem('dhp_auth_ok', 'true');
-    showDash();
-}
+// showDash and proceedLogin are defined globally above.
 
-function showDash() {
-    loginView.style.display = 'none';
-    dashView.style.display = 'block';
-    loadData();
-}
-
-// Data Logic
-// tournaments, tList, loader are declared at the top
+// データロジック
+// tournaments, tList, loader は上部で宣言済み
 
 async function loadData() {
-    loader.style.display = 'grid';
+    loader.classList.remove('u-hidden');
     tList.innerHTML = '';
     try {
-        // Fetch all
+        // 全件取得
         const q = query(colRef);
         const snapshot = await getDocs(q);
         tournaments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Sort: Open -> Upcoming -> Closed, then by date desc
+        // ソート: 受付中 -> 開催予定 -> 終了、その後に日付降順
         const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
 
         tournaments.sort((a, b) => {
@@ -181,22 +174,22 @@ async function loadData() {
         console.error(error);
         tList.innerHTML = `<div style="color:red; padding:20px;">エラーが発生しました: ${error.message}</div>`;
     } finally {
-        loader.style.display = 'none';
-        loadNews(); // Also load news
+        loader.classList.add('u-hidden');
+        loadNews(); // ニュースも読み込む
     }
 }
 
 const modal = document.getElementById('editModal');
 const editForm = document.getElementById('editForm');
 
-// Cross Circle Toggle
+// クロスサークル切替
 window.toggleCrossCircle = () => {
     const type = document.getElementById('inpEntryType').value;
     const grp = document.getElementById('grpWinDual');
     if (type === 'cross_ok') {
-        grp.style.display = 'block';
+        grp.classList.remove('u-hidden');
     } else {
-        grp.style.display = 'none';
+        grp.classList.add('u-hidden');
     }
 };
 
@@ -215,23 +208,23 @@ window.editItem = (id) => {
     document.getElementById('inpSupportUrl').value = t.supportUrl || '';
     document.getElementById('inpEntryType').value = t.entryType || 'circle_only';
     
-    // Toggle Dual Inputs
+    // デュアル入力の切替
     window.toggleCrossCircle();
 
     // XP
     if (t.xpLimit === 'none' || !t.xpLimit) {
         chkXpNone.checked = true;
-        xpInputs.style.opacity = '0.5'; xpInputs.style.pointerEvents = 'none';
+        xpInputs.classList.add('u-disabled');
         document.getElementById('inpXpAvg').value = '';
         document.getElementById('inpXpMax').value = '';
     } else {
         chkXpNone.checked = false;
-        xpInputs.style.opacity = '1'; xpInputs.style.pointerEvents = 'auto';
+        xpInputs.classList.remove('u-disabled');
         document.getElementById('inpXpAvg').value = t.xpLimit?.avg || '';
         document.getElementById('inpXpMax').value = t.xpLimit?.max || '';
     }
 
-    // Rules
+    // ルール
     document.querySelectorAll('input[name="rule"]').forEach(c => c.checked = false);
     if (t.rules && Array.isArray(t.rules)) {
         t.rules.forEach(r => {
@@ -240,7 +233,7 @@ window.editItem = (id) => {
         });
     }
 
-    // Stages
+    // ステージ
     document.querySelectorAll('input[name="stage"]').forEach(c => c.checked = false);
     if (t.bannedStages && Array.isArray(t.bannedStages)) {
         t.bannedStages.forEach(s => {
@@ -249,7 +242,7 @@ window.editItem = (id) => {
         });
     }
 
-    // Cast
+    // キャスト
     document.getElementById('inpCasterName').value = t.caster?.name || '';
     document.getElementById('inpCasterIcon').value = t.caster?.icon || '';
     document.getElementById('inpCasterX').value = t.caster?.x || '';
@@ -264,14 +257,14 @@ window.editItem = (id) => {
     document.getElementById('inpLicense').value = t.license || '';
     document.getElementById('inpArchiveUrl').value = t.archiveUrl || '';
 
-    // Winner
+    // 優勝者
     document.getElementById('inpWinTeam').value = t.winner?.teamName || '';
     
-    // Univ/Circle 1
+    // 大学/サークル 1
     document.getElementById('inpWinUniv').value = t.winner?.univ || '';
     document.getElementById('inpWinCircle').value = t.winner?.circle || '';
     
-    // Univ/Circle 2 (if exists)
+    // 大学/サークル 2 (存在する場合)
     document.getElementById('inpWinUniv2').value = t.winner?.univ2 || '';
     document.getElementById('inpWinCircle2').value = t.winner?.circle2 || '';
 
@@ -284,27 +277,27 @@ window.editItem = (id) => {
     document.getElementById('inpWinMem3').value = mems[2] || '';
     document.getElementById('inpWinMem4').value = mems[3] || '';
 
-    modal.style.display = 'flex';
+    modal.classList.add('is-active');
 };
 
 document.getElementById('btnNew').addEventListener('click', () => {
     document.getElementById('editId').value = '';
     document.getElementById('modalTitle').textContent = '新規大会作成';
     editForm.reset();
-    xpInputs.style.opacity = '1'; xpInputs.style.pointerEvents = 'auto';
+    xpInputs.classList.remove('u-disabled');
     chkXpNone.checked = false;
-    window.toggleCrossCircle(); // Reset dual inputs visibility
-    modal.style.display = 'flex';
+    window.toggleCrossCircle(); // デュアル入力の表示リセット
+    modal.classList.add('is-active');
 });
 
 document.getElementById('inpEntryType').addEventListener('change', window.toggleCrossCircle);
 
-document.getElementById('btnCloseModal').addEventListener('click', () => modal.style.display = 'none');
+document.getElementById('btnCloseModal').addEventListener('click', () => modal.classList.remove('is-active'));
 
 editForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    loader.style.display = 'grid';
-    modal.style.display = 'none';
+    loader.classList.remove('u-hidden');
+    modal.classList.remove('is-active');
 
     try {
         const id = document.getElementById('editId').value;
@@ -316,7 +309,7 @@ editForm.addEventListener('submit', async (e) => {
             max: parseInt(document.getElementById('inpXpMax').value) || 0
         };
 
-        // Winner Members: Collect 4 inputs
+        // 優勝メンバー: 4つの入力を収集
         const winMems = [];
         for(let i=1; i<=4; i++) {
             const val = document.getElementById(`inpWinMem${i}`).value.trim();
@@ -374,13 +367,13 @@ editForm.addEventListener('submit', async (e) => {
         console.error(err);
         alert('エラーが発生しました: ' + err.message);
     } finally {
-        loader.style.display = 'none';
+        loader.classList.add('u-hidden');
     }
 });
 
 window.deleteItem = async (id) => {
     if (!confirm('本当に削除しますか？')) return;
-    loader.style.display = 'grid';
+    loader.classList.remove('u-hidden');
     try {
         await deleteDoc(doc(db, "tournaments", id));
         await loadData();
@@ -388,12 +381,12 @@ window.deleteItem = async (id) => {
         console.error(e);
         alert('削除エラー');
     } finally {
-        loader.style.display = 'none';
+        loader.classList.add('u-hidden');
     }
 };
 
 
-// --- News Logic ---
+// --- ニュースロジック ---
 const newsList = document.getElementById('nList');
 let allNews = [];
 
@@ -401,29 +394,29 @@ document.getElementById('btnNewNews').addEventListener('click', () => {
     document.getElementById('newsForm').reset();
     document.getElementById('newsId').value = '';
     document.getElementById('newsModalTitle').textContent = 'お知らせ作成';
-    document.getElementById('newsTypeNormal').style.display = 'block';
-    document.getElementById('newsTypeTour').style.display = 'none';
+    document.getElementById('newsTypeNormal').classList.remove('u-hidden'); 
+    document.getElementById('newsTypeTour').classList.add('u-hidden');
     document.querySelector('input[name="newsType"][value="normal"]').checked = true;
 
-    // Set Today
+    // 今日の日付を設定
     const d = new Date();
     document.getElementById('inpNewsDate').value = d.toISOString().split('T')[0];
 
-    document.getElementById('newsModal').style.display = 'flex';
+    document.getElementById('newsModal').classList.add('is-active');
 });
 
 document.getElementById('btnCloseNewsModal').addEventListener('click', () => {
-    document.getElementById('newsModal').style.display = 'none';
+    document.getElementById('newsModal').classList.remove('is-active');
 });
 
 window.toggleNewsType = () => {
     const type = document.querySelector('input[name="newsType"]:checked').value;
     if (type === 'normal') {
-        document.getElementById('newsTypeNormal').style.display = 'block';
-        document.getElementById('newsTypeTour').style.display = 'none';
+        document.getElementById('newsTypeNormal').classList.remove('u-hidden');
+        document.getElementById('newsTypeTour').classList.add('u-hidden');
     } else {
-        document.getElementById('newsTypeNormal').style.display = 'none';
-        document.getElementById('newsTypeTour').style.display = 'block';
+        document.getElementById('newsTypeNormal').classList.add('u-hidden');
+        document.getElementById('newsTypeTour').classList.remove('u-hidden');
         loadTourSelect();
     }
 }
@@ -461,8 +454,8 @@ ${t.name}の開催が決定しました。皆様の参加をお待ちしてい�
 
 document.getElementById('newsForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    loader.style.display = 'grid';
-    document.getElementById('newsModal').style.display = 'none';
+    loader.classList.remove('u-hidden');
+    document.getElementById('newsModal').classList.remove('is-active');
 
     try {
         const id = document.getElementById('newsId').value;
@@ -470,7 +463,7 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
         const refTourId = type === 'tournament' ? document.getElementById('inpNewsTourId').value : null;
         let badge = 'info';
 
-        if (type === 'tournament') badge = 'tour'; // Or use type field
+        if (type === 'tournament') badge = 'tour'; // もしくはtypeフィールドを使用
         else badge = document.getElementById('inpNewsBadge').value;
 
         const data = {
@@ -478,7 +471,7 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
             date: document.getElementById('inpNewsDate').value,
             body: document.getElementById('inpNewsBody').value,
             type: type,
-            badge: badge, // For UI color
+            badge: badge, // UIカラー用
             refTourId: refTourId,
             updatedAt: new Date().toISOString()
         };
@@ -494,19 +487,19 @@ document.getElementById('newsForm').addEventListener('submit', async (e) => {
         console.error(e);
         alert('Error: ' + e.message);
     } finally {
-        loader.style.display = 'none';
+        loader.classList.add('u-hidden');
     }
 });
 
 async function loadNews() {
     newsList.innerHTML = '';
-    const q = query(collection(db, "news"), orderBy("date", "desc")); // Should limit?
+    const q = query(collection(db, "news"), orderBy("date", "desc")); // 制限すべき?
     const snap = await getDocs(q);
     allNews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
     allNews.forEach(n => {
         const div = document.createElement('div');
-        div.className = 't-item'; // Reuse
+        div.className = 't-item'; // 再利用
         let badgeClass = 'badge-info';
         let badgeText = 'お知らせ';
 
@@ -544,29 +537,29 @@ window.editNews = (id) => {
     if (n.type === 'normal') {
         document.getElementById('inpNewsBadge').value = n.badge || 'info';
     } else {
-        // tour
+        // 大会
         if (n.refTourId) {
-            // Need force load selector logic if empty?
-            // Usually loadTourSelect depends on tournaments array being loaded. 
-            // Assuming tournaments loaded.
+            // 空の場合、セレクタの強制ロードが必要?
+            // 通常 loadTourSelect は tournaments 配列がロードされていることに依存。
+            // 大会データはロード済みと仮定。
             loadTourSelect().then(() => {
                 document.getElementById('inpNewsTourId').value = n.refTourId;
             });
         }
     }
 
-    document.getElementById('newsModal').style.display = 'flex';
+    document.getElementById('newsModal').classList.add('is-active');
 };
 
 window.deleteNews = async (id) => {
     if (!confirm('削除しますか？')) return;
-    loader.style.display = 'grid';
+    loader.classList.remove('u-hidden');
     await deleteDoc(doc(db, "news", id));
     await loadNews();
-    loader.style.display = 'none';
+    loader.classList.add('u-hidden');
 }
 
-// Tab Logic
+// タブロック
 window.switchTab = (tab) => {
     const pTour = document.getElementById('panelTour');
     const pNews = document.getElementById('panelNews');
@@ -574,15 +567,17 @@ window.switchTab = (tab) => {
     const bNews = document.getElementById('tabBtnNews');
 
     if (tab === 'tour') {
-        pTour.style.display = 'block';
-        pNews.style.display = 'none';
-        bTour.style.background = 'var(--c-primary)'; bTour.style.color = 'white'; bTour.style.border = 'none';
-        bNews.style.background = 'transparent'; bNews.style.color = '#4a5568'; bNews.style.border = '1px solid #cbd5e0';
+        pTour.classList.remove('u-hidden');
+        pNews.classList.add('u-hidden');
+        
+        bTour.classList.add('is-active');
+        bNews.classList.remove('is-active');
     } else {
-        pTour.style.display = 'none';
-        pNews.style.display = 'block';
-        bNews.style.background = 'var(--c-primary)'; bNews.style.color = 'white'; bNews.style.border = 'none';
-        bTour.style.background = 'transparent'; bTour.style.color = '#4a5568'; bTour.style.border = '1px solid #cbd5e0';
-        loadNews(); // Ensure loaded
+        pTour.classList.add('u-hidden');
+        pNews.classList.remove('u-hidden');
+
+        bNews.classList.add('is-active');
+        bTour.classList.remove('is-active');
+        loadNews(); // 確実にロード
     }
 }

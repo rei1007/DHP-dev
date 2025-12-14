@@ -13,35 +13,34 @@
 </head>
 
 <body>
-    <div id="loader" class="loading-mask">Processing...</div>
+    <div id="loader" class="loading-mask u-hidden">Processing...</div>
 
-    <!-- 1. Login View -->
+    <!-- 1. ログイン画面 -->
     <div id="loginView" class="login-wrapper">
         <div class="card login-card">
-            <h1 class="login-title">大学杯 運営管理</h1>
-            <p style="margin-bottom:20px; font-size:0.9rem;">管理用パスワードを入力してください</p>
+            <h1 class="login-title">運営ダッシュボード</h1>
+            <p class="u-mb-20 u-text-sm">管理用パスワードを入力してください</p>
             <form id="loginForm">
                 <input type="password" id="adminPass" placeholder="Password" required>
                 <button type="submit" class="btn">ログイン</button>
             </form>
-            <p id="loginMsg" style="color:red; margin-top:10px; font-size:0.8rem;"></p>
+            <p id="loginMsg" class="u-text-red u-mt-10 u-text-xs"></p>
         </div>
     </div>
 
-    <!-- 2. Dashboard View -->
-    <div id="dashView" class="dashboard-wrapper">
-        <div style="display:flex; gap:10px; margin-bottom:20px;">
-            <button class="btn" id="tabBtnTour" onclick="switchTab('tour')">大会管理</button>
-            <button class="btn" id="tabBtnNews" onclick="switchTab('news')"
-                style="background:transparent; border:1px solid #cbd5e0; color:#4a5568;">お知らせ管理</button>
+    <!-- 2. ダッシュボード画面 -->
+    <div id="dashView" class="dashboard-wrapper u-hidden">
+        <div class="u-flex u-gap-10 u-mb-20">
+            <button class="tab-btn is-active" id="tabBtnTour" onclick="switchTab('tour')">大会管理</button>
+            <button class="tab-btn" id="tabBtnNews" onclick="switchTab('news')">お知らせ管理</button>
         </div>
 
-        <!-- Tournament Tab -->
+        <!-- 大会タブ -->
         <div id="panelTour">
             <div class="dash-header">
                 <div>
                     <h2>大会データ管理</h2>
-                    <div style="font-size:0.8rem; color:#718096;">Firestore: tournaments</div>
+                    <div class="u-text-xs u-text-gray">Firestore: tournaments</div>
                 </div>
                 <button class="btn btn-green" id="btnNew">＋ 新規大会作成</button>
             </div>
@@ -50,12 +49,12 @@
             </div>
         </div>
 
-        <!-- News Tab -->
-        <div id="panelNews" style="display:none;">
+        <!-- ニュースタブ -->
+        <div id="panelNews" class="u-hidden">
             <div class="dash-header">
                 <div>
                     <h2>お知らせ管理</h2>
-                    <div style="font-size:0.8rem; color:#718096;">Firestore: news</div>
+                    <div class="u-text-xs u-text-gray">Firestore: news</div>
                 </div>
                 <button class="btn btn-green" id="btnNewNews">＋ お知らせ作成</button>
             </div>
@@ -65,80 +64,80 @@
         </div>
     </div>
 
-    <!-- Edit Modal -->
+    <!-- 編集モーダル -->
     <div id="editModal" class="modal">
         <div class="modal-content">
-            <h2 id="modalTitle" style="margin-bottom:20px;">大会情報の編集</h2>
+            <h2 id="modalTitle" class="u-mb-20">大会情報の編集</h2>
             <form id="editForm">
                 <input type="hidden" id="editId">
 
                 <div class="modal-grid">
-                    <!-- Column 1: Basic Info -->
+                    <!-- カラム 1: 基本情報 -->
                     <div>
                         <div class="section-label">基本情報</div>
-                        <label>大会名</label>
+                        <label class="form-label-bold">大会名</label>
                         <input type="text" id="inpTourName" placeholder="第n回 大学杯">
 
-                        <div style="display:flex; gap:10px;">
-                            <div style="flex:1;">
-                                <label>大会ステータス</label>
+                        <div class="u-flex u-gap-10">
+                            <div class="u-flex-1">
+                                <label class="form-label-bold">大会ステータス</label>
                                 <select id="inpStatus">
                                     <option value="upcoming">開催予定</option>
                                     <option value="open">エントリー受付中</option>
                                     <option value="closed">終了</option>
                                 </select>
                             </div>
-                            <div style="flex:1;">
-                                <label>開催日</label>
+                            <div class="u-flex-1">
+                                <label class="form-label-bold">開催日</label>
                                 <input type="datetime-local" id="inpEventDate">
                             </div>
                         </div>
 
-                        <label>エントリー期間</label>
-                        <div style="display:flex; gap:5px; align-items:center;">
-                            <input type="datetime-local" id="inpEntryStart">
+                        <label class="form-label-bold">エントリー期間</label>
+                        <div class="u-flex u-gap-5 u-items-center u-mb-20">
+                            <input type="datetime-local" id="inpEntryStart" class="u-mb-0">
                             <span>~</span>
-                            <input type="datetime-local" id="inpEntryEnd">
+                            <input type="datetime-local" id="inpEntryEnd" class="u-mb-0">
                         </div>
 
-                        <label>大会概要URL</label>
+                        <label class="form-label-bold">大会概要URL</label>
                         <input type="url" id="inpRulesUrl" placeholder="https://docs.google.com/...">
 
-                        <label>タイカイサポートリンク</label>
+                        <label class="form-label-bold">タイカイサポートリンク</label>
                         <input type="url" id="inpSupportUrl" placeholder="https://...">
 
                         <div class="section-label">ルール設定</div>
-                        <label>採用ルール</label>
+                        <label class="form-label-bold">採用ルール</label>
                         <div class="checkbox-group" id="ruleGroup"></div>
 
-                        <label>ステージ制限</label>
-                        <div class="stage-grid" id="stageGroup" style="height:200px;"></div>
+                        <label class="form-label-bold">ステージ制限</label>
+                        <div class="stage-grid" id="stageGroup"></div>
 
 
                     </div>
 
-                    <!-- Column 2: Advanced & Cast -->
+                    <!-- カラム 2: 詳細設定 & キャスト -->
                     <div>
                         <div class="section-label">参加条件・XP</div>
-                        <label>エントリータイプ</label>
+                        <label class="form-label-bold">エントリータイプ</label>
                         <select id="inpEntryType">
                             <option value="circle_only">同一サークル限定</option>
                             <option value="cross_ok">クロスサークルOK</option>
                             <option value="invite">サークル選抜</option>
                         </select>
 
-                        <fieldset style="margin-top:10px;">
+                        <fieldset class="u-mt-10">
                             <legend>XP制限</legend>
-                            <label class="checkbox-label" style="margin-bottom:10px;">
+                            <label class="checkbox-label u-mb-10">
                                 <input type="checkbox" id="chkXpNone"> 制限なし
                             </label>
-                            <div id="xpInputs" style="display:flex; gap:10px;">
-                                <div style="flex:1;">
-                                    <label>平均上限</label>
+                            <div id="xpInputs" class="u-flex u-gap-10">
+                                <div class="u-flex-1">
+                                    <label class="form-label-bold">平均上限</label>
                                     <input type="number" id="inpXpAvg" placeholder="2200">
                                 </div>
-                                <div style="flex:1;">
-                                    <label>最高上限</label>
+                                <div class="u-flex-1">
+                                    <label class="form-label-bold">最高上限</label>
                                     <input type="number" id="inpXpMax" placeholder="2400">
                                 </div>
                             </div>
@@ -146,103 +145,101 @@
 
                         <div class="section-label">キャスト・配信</div>
 
-                        <!-- Caster -->
-                        <div
-                            style="background:#f7fafc; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;">
-                            <label style="font-weight:bold; color:#4a5568;">実況 (Caster)</label>
+                        <!-- 実況 -->
+                        <div class="box-light">
+                            <label class="form-label-bold">実況 (Caster)</label>
                             <input type="text" id="inpCasterName" placeholder="名前">
                             <input type="url" id="inpCasterIcon" placeholder="アイコンURL">
-                            <div style="display:flex; gap:5px;">
-                                <input type="text" id="inpCasterX" placeholder="@..." style="flex:1;">
+                            <div class="u-flex u-gap-5">
+                                <input type="text" id="inpCasterX" placeholder="@..." class="u-flex-1">
                                 <input type="url" id="inpCasterYt" placeholder="https://youtube.com/..."
-                                    style="flex:1;">
+                                    class="u-flex-1">
                             </div>
                         </div>
 
-                        <!-- Commentator -->
-                        <div
-                            style="background:#f7fafc; padding:10px; border-radius:6px; margin-bottom:10px; border:1px solid #e2e8f0;">
-                            <label style="font-weight:bold; color:#4a5568;">解説 (Commentator)</label>
+                        <!-- 解説 -->
+                        <div class="box-light">
+                            <label class="form-label-bold">解説 (Commentator)</label>
                             <input type="text" id="inpComName" placeholder="名前">
                             <input type="url" id="inpComIcon" placeholder="アイコンURL">
-                            <div style="display:flex; gap:5px;">
-                                <input type="text" id="inpComX" placeholder="@..." style="flex:1;">
-                                <input type="url" id="inpComYt" placeholder="https://youtube.com/..." style="flex:1;">
+                            <div class="u-flex u-gap-5">
+                                <input type="text" id="inpComX" placeholder="@..." class="u-flex-1">
+                                <input type="url" id="inpComYt" placeholder="https://youtube.com/..." class="u-flex-1">
                             </div>
                         </div>
 
-                        <label>配信担当</label>
+                        <label class="form-label-bold">配信担当</label>
                         <input type="text" id="inpOperator" placeholder="担当者">
 
-                        <label>任天堂許諾番号</label>
+                        <label class="form-label-bold">任天堂許諾番号</label>
                         <input type="text" id="inpLicense" placeholder="NJ...">
                     </div>
                 </div>
 
-                <!-- Result & Archive Section -->
-                <div class="section-label" style="margin-top:20px;">結果・アーカイブ</div>
-                <label>優勝チーム名</label>
+                <!-- 結果・アーカイブセクション -->
+                <div class="section-label u-mt-20">結果・アーカイブ</div>
+                <label class="form-label-bold">優勝チーム名</label>
                 <input type="text" id="inpWinTeam">
 
-                <div style="display:flex; gap:10px; margin-bottom:5px;">
-                    <div style="flex:1;">
-                        <input type="text" id="inpWinUniv" placeholder="大学名1" style="margin-bottom:5px; width:100%;">
-                        <input type="text" id="inpWinCircle" placeholder="サークル名1" style="margin-bottom:0; width:100%;">
+                <div class="u-flex u-gap-10 u-mb-5">
+                    <div class="u-flex-1">
+                        <input type="text" id="inpWinUniv" placeholder="大学名1" class="u-mb-5 u-w-full">
+                        <input type="text" id="inpWinCircle" placeholder="サークル名1" class="u-w-full u-mb-0">
                     </div>
-                    <div id="grpWinDual" style="flex:1; display:none;">
-                        <input type="text" id="inpWinUniv2" placeholder="大学名2" style="margin-bottom:5px; width:100%;">
-                        <input type="text" id="inpWinCircle2" placeholder="サークル名2" style="margin-bottom:0; width:100%;">
+                    <div id="grpWinDual" class="u-flex-1 u-hidden">
+                        <input type="text" id="inpWinUniv2" placeholder="大学名2" class="u-mb-5 u-w-full">
+                        <input type="text" id="inpWinCircle2" placeholder="サークル名2" class="u-w-full u-mb-0">
                     </div>
                 </div>
 
-                <label style="margin-top:10px;">優勝メンバー (4名)</label>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                <label class="form-label-bold u-mt-10">優勝メンバー (4名)</label>
+                <div class="modal-grid u-gap-10">
                     <input type="text" id="inpWinMem1" placeholder="メンバー1">
                     <input type="text" id="inpWinMem2" placeholder="メンバー2">
                     <input type="text" id="inpWinMem3" placeholder="メンバー3">
                     <input type="text" id="inpWinMem4" placeholder="メンバー4">
                 </div>
 
-                <label>優勝時の画像URL</label>
+                <label class="form-label-bold">優勝時の画像URL</label>
                 <input type="url" id="inpWinImage" placeholder="https://...">
-                <label>優勝ポストURL</label>
+                <label class="form-label-bold">優勝ポストURL</label>
                 <input type="url" id="inpWinUrl" placeholder="https://x.com/...">
 
-                <label>配信アーカイブURL</label>
+                <label class="form-label-bold">配信アーカイブURL</label>
                 <input type="url" id="inpArchiveUrl" placeholder="https://youtube.com/...">
 
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
-                    <button type="button" class="btn btn-red" id="btnCloseModal" style="width:auto;">キャンセル</button>
-                    <button type="submit" class="btn btn-green" style="width:auto;">保存する</button>
+                <div class="u-flex u-justify-end u-gap-10 u-mt-20">
+                    <button type="button" class="btn btn-red" id="btnCloseModal">キャンセル</button>
+                    <button type="submit" class="btn btn-green">保存する</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- NEWS MODAL -->
+    <!-- ニュースモーダル -->
     <div id="newsModal" class="modal">
         <div class="modal-content" style="max-width:800px;">
-            <h2 id="newsModalTitle" style="margin-bottom:20px;">お知らせ編集</h2>
+            <h2 id="newsModalTitle" class="u-mb-20">お知らせ編集</h2>
             <form id="newsForm">
                 <input type="hidden" id="newsId">
 
-                <div style="margin-bottom:15px;">
-                    <label>フォーマット</label>
-                    <div style="display:flex; gap:20px; margin-top:5px;">
-                        <label style="display:flex; align-items:center; cursor:pointer;">
+                <div class="u-mb-20">
+                    <label class="form-label-bold">フォーマット</label>
+                    <div class="u-flex u-gap-20 u-mt-5">
+                        <label class="u-flex u-items-center u-cursor-pointer">
                             <input type="radio" name="newsType" value="normal" checked onchange="toggleNewsType()">
                             通常フォーマット
                         </label>
-                        <label style="display:flex; align-items:center; cursor:pointer;">
+                        <label class="u-flex u-items-center u-cursor-pointer">
                             <input type="radio" name="newsType" value="tournament" onchange="toggleNewsType()"> 大会フォーマット
                         </label>
                     </div>
                 </div>
 
-                <!-- Normal options -->
+                <!-- 通常オプション -->
                 <div id="newsTypeNormal">
-                    <label>バッジ選択</label>
-                    <select id="inpNewsBadge" style="margin-bottom:10px;">
+                    <label class="form-label-bold">バッジ選択</label>
+                    <select id="inpNewsBadge" class="u-mb-10">
                         <option value="info">お知らせ (Info)</option>
                         <option value="important">重要 (Important)</option>
                         <option value="recruit">運営募集 (Recruit)</option>
@@ -250,39 +247,38 @@
                     </select>
                 </div>
 
-                <!-- Tournament options -->
-                <div id="newsTypeTour"
-                    style="display:none; background:#f7fafc; padding:15px; border-radius:8px; margin-bottom:15px;">
-                    <label>対象大会</label>
-                    <div style="display:flex; gap:10px;">
-                        <select id="inpNewsTourId" style="flex:1;">
+                <!-- 大会オプション -->
+                <div id="newsTypeTour" class="box-light u-hidden">
+                    <label class="form-label-bold">対象大会</label>
+                    <div class="u-flex u-gap-10">
+                        <select id="inpNewsTourId" class="u-flex-1">
                             <option value="">大会を選択してください</option>
                         </select>
                         <button type="button" class="btn btn-sm" onclick="generateDraft()">下書き生成</button>
                     </div>
-                    <p style="font-size:0.8rem; color:gray; margin-top:5px;">※大会を選択して「下書き生成」を押すと、本文が自動入力されます。</p>
+                    <p class="u-text-xs u-text-gray u-mt-5">※大会を選択して「下書き生成」を押すと、本文が自動入力されます。</p>
                 </div>
 
                 <div>
-                    <label>タイトル</label>
+                    <label class="form-label-bold">タイトル</label>
                     <input type="text" id="inpNewsTitle" placeholder="タイトルを入力" required>
                 </div>
 
-                <!-- Date -->
-                <div style="margin-bottom:10px;">
-                    <label>公開日</label>
+                <!-- 日付 -->
+                <div class="u-mb-10">
+                    <label class="form-label-bold">公開日</label>
                     <input type="date" id="inpNewsDate" required>
                 </div>
 
                 <div>
-                    <label>本文 (Markdown)</label>
-                    <div style="font-size:0.8rem; color:gray; margin-bottom:5px;">
+                    <label class="form-label-bold">本文 (Markdown)</label>
+                    <div class="u-text-xs u-text-gray u-mb-5">
                         #見出し, -箇条書き, **強調**, __下線__, ~~取消~~, [リンク](URL)
                     </div>
                     <textarea id="inpNewsBody" rows="10" placeholder="お知らせ本文..." required></textarea>
                 </div>
 
-                <div style="margin-top:20px; text-align:right; display:flex; gap:10px; justify-content:flex-end;">
+                <div class="u-mt-20 u-flex u-justify-end u-gap-10">
                     <button type="button" class="btn btn-red" id="btnCloseNewsModal">キャンセル</button>
                     <button type="submit" class="btn">保存</button>
                 </div>

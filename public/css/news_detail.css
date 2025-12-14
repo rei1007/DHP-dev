@@ -1,39 +1,8 @@
-/* Page specific styles for News Detail */
+/* =========================================
+   ニュース詳細ページのスタイル
+   ========================================= */
 
-/* Header */
-/* Assuming common header styles, but overriding or adding specific checks if needed */
-/* The header structure in news_detail.html relies on common.css usually but let's ensure it's styled right */
-
-.header-inner {
-    height: 70px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-.brand img {
-    height: 50px;
-}
-
-.btn-dash-nav {
-    padding: 8px 20px;
-    border-radius: 4px;
-    background: var(--c-primary);
-    color: white;
-    font-size: 0.9rem;
-    font-weight: 500;
-    display: inline-block;
-    text-decoration: none;
-    transition: 0.2s;
-}
-
-.btn-dash-nav:hover {
-    background: #102a4e;
-    transform: translateY(-1px);
-}
+/* ヘッダーのスタイルはcommon.cssで管理 */
 
 .container {
     max-width: 800px;
@@ -52,10 +21,8 @@
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     border: 1px solid #e2e8f0;
-}
 
-@media (max-width: 600px) {
-    .news-detail-container {
+    @media (max-width: 600px) {
         padding: 20px;
     }
 }
@@ -90,40 +57,40 @@
     font-size: 1rem;
     line-height: 1.8;
     color: #2d3748;
-}
 
-.nd-content h2 {
-    font-size: 1.4rem;
-    color: var(--c-primary);
-    border-left: 4px solid #00A4C2;
-    padding-left: 15px;
-    margin-top: 40px;
-    margin-bottom: 20px;
-}
+    & h2 {
+        font-size: 1.4rem;
+        color: var(--c-primary);
+        border-left: 4px solid var(--c-link-special);
+        padding-left: 15px;
+        margin-top: 40px;
+        margin-bottom: 20px;
+    }
 
-.nd-content h3 {
-    font-size: 1.2rem;
-    font-weight: 700;
-    margin-top: 30px;
-    margin-bottom: 15px;
-}
+    & h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
 
-.nd-content p {
-    margin-bottom: 1.5rem;
-}
+    & p {
+        margin-bottom: 1.5rem;
+    }
 
-.nd-content ul {
-    margin-bottom: 1.5rem;
-    padding-left: 1.5rem;
-}
+    & ul {
+        margin-bottom: 1.5rem;
+        padding-left: 1.5rem;
+    }
 
-.nd-content li {
-    margin-bottom: 0.5rem;
-}
+    & li {
+        margin-bottom: 0.5rem;
+    }
 
-.nd-content a {
-    color: white;
-    text-decoration: underline;
+    & a {
+        color: var(--c-accent);
+        text-decoration: underline;
+    }
 }
 
 .btn-entry-area {
@@ -143,11 +110,11 @@
     box-shadow: 0 4px 10px rgba(49, 130, 206, 0.3);
     transition: 0.2s;
     font-size: 1.1rem;
-}
 
-.btn-entry-lg:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(49, 130, 206, 0.4);
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(49, 130, 206, 0.4);
+    }
 }
 
 .back-link {
@@ -162,9 +129,113 @@
     border-radius: 4px;
     color: #718096;
     transition: 0.2s;
+
+    &:hover {
+        background: #f7fafc;
+        color: var(--c-primary);
+    }
 }
 
-.btn-back:hover {
+/* JS用リッチコンポーネント */
+.rich-xp-box {
     background: #f7fafc;
-    color: var(--c-primary);
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid #edf2f7;
+    margin-bottom: 20px;
+}
+
+.rich-xp-title {
+    font-weight: bold;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.rich-xp-bar {
+    width: 100%;
+    height: 10px;
+    background: #e2e8f0;
+    border-radius: 5px;
+    overflow: hidden;
+
+    & div {
+        height: 100%;
+        background: linear-gradient(90deg, #4299e1 0%, #667eea 100%);
+    }
+}
+
+.rich-cast-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.rich-cast-card {
+    background: white;
+    border: 1px solid #e2e8f0;
+    padding: 15px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+
+    & img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    & .role {
+        font-size: 0.75rem;
+        color: #718096;
+        font-weight: bold;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+    }
+
+    & .name {
+        font-weight: bold;
+        color: #1a202c;
+        font-size: 1.05rem;
+    }
+}
+
+.rich-cast-link {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-decoration: none;
+
+    &.x {
+        color: #1da1f2;
+        background: #ebf8ff;
+    }
+
+    &.yt {
+        color: #ff0000;
+        background: #fff5f5;
+    }
+}
+
+.rich-overview {
+    margin-top: 50px;
+    border-top: 2px solid #edf2f7;
+    padding-top: 40px;
+}
+
+.rich-overview-box {
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }
