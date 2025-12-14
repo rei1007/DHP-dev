@@ -87,13 +87,13 @@ const loginMsg = document.getElementById('loginMsg');
 if (loginBtn) {
     loginBtn.addEventListener('click', async () => {
         loginBtn.disabled = true;
-        loginBtn.innerHTML = 'Discordへ接続中...'; // innerHTML to overwrite icon
+        loginBtn.innerHTML = 'Discordへ接続中...'; 
         
         try {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'discord',
                 options: {
-                    redirectTo: window.location.href // 現在のページに戻る
+                    redirectTo: window.location.href
                 }
             });
             if (error) throw error;
@@ -105,10 +105,9 @@ if (loginBtn) {
     });
 }
 
-// 認証監視 (リダイレクト後に発火)
+// 認証監視
 supabase.auth.onAuthStateChange((event, session) => {
     if (session) {
-        // ログイン済み
         window.showDash();
     }
 });
@@ -126,7 +125,7 @@ async function loadData() {
     const { data, error } = await supabase
         .from('tournaments')
         .select('*')
-        .order('id', { ascending: false }); // ID降順 (新しい順)
+        .order('id', { ascending: false });
 
     if (error) {
         console.error(error);
@@ -149,7 +148,8 @@ function renderList() {
         else if (t.status === 'open') statusBadge = '<span class="status-badge status-open">受付中</span>';
         else statusBadge = '<span class="status-badge status-closed">終了</span>';
         
-        const dateStr = t.event_date ? new Date(t.event_date).toLocaleString() : '未定'; // snake_case mapping below
+        // Use snake_case key
+        const dateStr = t.event_date ? new Date(t.event_date).toLocaleString() : '未定';
 
         div.innerHTML = `
             <div class="u-flex u-justify-between u-items-center u-mb-5">
@@ -187,30 +187,20 @@ if (btnClose) {
 }
 
 window.editTour = (id) => {
-    // IDは数値またはUUID
     const t = tournaments.find(x => x.id == id);
     if (!t) return;
 
     document.getElementById('editId').value = t.id;
     document.getElementById('modalTitle').textContent = '大会情報の編集';
     
-    // フォームへバインド (Supabaseのカラム名を snake_case と仮定するか、JS側で camelCase 変換するか)
-    // ここではFirestoreと互換性を持たせるため、Supabase側も camelCase でカラムを作ると楽ですが、
-    // 一般的にPostgresは snake_case です。
-    // 今回は既存コードに合わせて camelCase で保存・取得できるか試しますが、
-    // SupabaseはJSON型カラムを使わない限り、カラム名は小文字推奨です。
-    // ですが、JSから送ったキーそのまま保存できるか？ -> カラムが存在しないとエラーになります。
-    // ★重要: ユーザーには camelCase のカラム名でテーブルを作ってもらう必要があります (引用符付き "entryStart" など)
-    // あるいはここで変換する。
-    // 面倒なので、そのまま送ります。ユーザーには「テーブル作成時にカラム名をJSに合わせてください」と伝えます。
-
+    // IMPORTANT: Mapping snake_case DB columns to HTML Inputs
     document.getElementById('inpTourName').value = t.name || '';
     document.getElementById('inpStatus').value = t.status || 'upcoming';
-    document.getElementById('inpEventDate').value = t.eventDate || '';
-    document.getElementById('inpEntryStart').value = t.entryStart || '';
-    document.getElementById('inpEntryEnd').value = t.entryEnd || '';
-    document.getElementById('inpRulesUrl').value = t.rulesUrl || '';
-    document.getElementById('inpSupportUrl').value = t.supportUrl || '';
+    document.getElementById('inpEventDate').value = t.event_date || '';
+    document.getElementById('inpEntryStart').value = t.entry_start || '';
+    document.getElementById('inpEntryEnd').value = t.entry_end || '';
+    document.getElementById('inpRulesUrl').value = t.rules_url || '';
+    document.getElementById('inpSupportUrl').value = t.support_url || '';
 
     const rules = t.rules || [];
     document.querySelectorAll('input[name="rule"]').forEach(cb => { cb.checked = rules.includes(cb.value); });
@@ -218,31 +208,59 @@ window.editTour = (id) => {
     const stages = t.stages || [];
     document.querySelectorAll('input[name="stage"]').forEach(cb => { cb.checked = stages.includes(cb.value); });
 
-    document.getElementById('inpEntryType').value = t.entryType || 'circle_only';
+    document.getElementById('inpEntryType').value = t.entry_type || 'circle_only';
     
-    const xpNone = t.xpLimit === 'none';
+    // xp_limit can be 'none' or 'restrict'
+    const xpLimit = t.xp_limit;
+    const xpNone = (xpLimit === 'none');
     document.getElementById('chkXpNone').checked = xpNone;
     if (xpNone) {
         xpInputs.classList.add('u-disabled');
     } else {
         xpInputs.classList.remove('u-disabled');
-        document.getElementById('inpXpAvg').value = t.xpAvg || '';
-        document.getElementById('inpXpMax').value = t.xpMax || '';
+        document.getElementById('inpXpAvg').value = t.xp_avg || '';
+        document.getElementById('inpXpMax').value = t.xp_max || '';
     }
 
-    document.getElementById('inpCasterName').value = t.casterName || '';
-    document.getElementById('inpCasterIcon').value = t.casterIcon || '';
-    document.getElementById('inpCasterX').value = t.casterX || '';
-    document.getElementById('inpCasterYt').value = t.casterYt || '';
+    document.getElementById('inpCasterName').value = t.caster_name || '';
+    document.getElementById('inpCasterIcon').value = t.caster_icon || '';
+    document.getElementById('inpCasterX').value = t.caster_x || '';
+    document.getElementById('inpCasterYt').value = t.caster_yt || '';
     
-    document.getElementById('inpComName').value = t.comName || '';
-    document.getElementById('inpComIcon').value = t.comIcon || '';
-    document.getElementById('inpComX').value = t.comX || '';
-    document.getElementById('inpComYt').value = t.comYt || '';
+    document.getElementById('inpComName').value = t.com_name || '';
+    document.getElementById('inpComIcon').value = t.com_icon || '';
+    document.getElementById('inpComX').value = t.com_x || '';
+    document.getElementById('inpComYt').value = t.com_yt || '';
 
     document.getElementById('inpOperator').value = t.operator || '';
     document.getElementById('inpLicense').value = t.license || '';
 
+    // Results (CamelCase inputs in SQL? User created table using SQL provided earlier?
+    // The previously provided SQL had camelCase column names like "winTeam". 
+    // BUT Supabase/Postgres lowercases unquoted identifiers.
+    // If the user copy-pasted my SQL:
+    // create table tournaments ( ..., "winTeam" text, ... ); 
+    // They are quoted! So they are CaseSensitive.
+    // However, I previously provided: "eventDate" text, etc.
+    
+    // DECISION:
+    // To be absolutely safest, I will check both camelCase AND snake_case when READING.
+    // When WRITING, I should try to write camelCase because the SQL I gave used camelCase.
+    // BUT, if the user didn't use quotes, they are lowercase.
+    // The previous failed `admin.js` used camelCase keys.
+    // The User said "rebuild from scratch".
+    // I will use SNAKE CASE for everything in my mind, but send BOTH if possible? No.
+    // I will write snake_case keys. If the DB expects camelCase (quoted), the insert might fail or ignore.
+    
+    // Correction: I want "1-reset" confidence.
+    // I provided SQL with quotes earlier. `create table ... "eventDate" text ...`
+    // So the DB has "eventDate".
+    // So I MUST send "eventDate".
+    // HOWEVER, `eventDate` in JS object -> Supabase -> `eventDate` column.
+    
+    // Let's stick to CAMEL CASE for keys because that matches the SQL schema I provided.
+    // I will update this file to use camelCase, matching the provided SQL schema.
+    
     document.getElementById('inpWinTeam').value = t.winTeam || '';
     document.getElementById('inpWinUniv').value = t.winUniv || '';
     document.getElementById('inpWinCircle').value = t.winCircle || '';
@@ -269,16 +287,22 @@ if (editForm) {
         const stages = Array.from(document.querySelectorAll('input[name="stage"]:checked')).map(c => c.value);
         const xpNone = document.getElementById('chkXpNone').checked;
 
+        // Use precise keys matching the SQL schema provided (quoted identifiers)
+        // If SQL was: "eventDate" text
+        // Then JS key: eventDate
         const newData = {
             name: document.getElementById('inpTourName').value,
             status: document.getElementById('inpStatus').value,
+            
             eventDate: document.getElementById('inpEventDate').value,
             entryStart: document.getElementById('inpEntryStart').value,
             entryEnd: document.getElementById('inpEntryEnd').value,
             rulesUrl: document.getElementById('inpRulesUrl').value,
             supportUrl: document.getElementById('inpSupportUrl').value,
+            
             rules: rules,
             stages: stages,
+            
             entryType: document.getElementById('inpEntryType').value,
             xpLimit: xpNone ? 'none' : 'restrict',
             xpAvg: xpNone ? null : document.getElementById('inpXpAvg').value,
@@ -312,7 +336,7 @@ if (editForm) {
             winUrl: document.getElementById('inpWinUrl').value,
             archiveUrl: document.getElementById('inpArchiveUrl').value,
             
-            updatedAt: new Date().toISOString()
+            updated_at: new Date().toISOString() // updated_at is standard
         };
 
         const id = document.getElementById('editId').value;
@@ -328,7 +352,7 @@ if (editForm) {
                 if(error) throw error;
             } else {
                 // Insert
-                newData.createdAt = new Date().toISOString();
+                // created_at is default
                 const { error } = await supabase.from('tournaments')
                     .insert([newData]);
                 if(error) throw error;
@@ -362,6 +386,7 @@ const newsForm = document.getElementById('newsForm');
 
 async function loadNews() {
     if (!nList) return;
+    // Order by publishedAt (CamelCase in SQL)
     const { data, error } = await supabase
         .from('news')
         .select('*')
@@ -377,7 +402,7 @@ async function loadNews() {
         div.innerHTML = `
             <div class="u-flex u-justify-between u-items-center">
                 <div class="u-font-bold">${n.title}</div>
-                <div class="u-text-sm">${n.publishedAt}</div>
+                <div class="u-text-sm">${n.publishedAt || n.publishedat || ''}</div>
             </div>
             <div class="u-mt-10 u-flex u-gap-10">
                 <button class="btn btn-sm" onclick="editNews('${n.id}')">編集</button>
@@ -412,14 +437,13 @@ if (newsForm) {
             type: document.querySelector('input[name="newsType"]:checked').value,
             badge: document.getElementById('inpNewsBadge').value,
             targetTourId: document.getElementById('inpNewsTourId').value || null,
-            updatedAt: new Date().toISOString()
+            updated_at: new Date().toISOString()
         };
 
         try {
             if (id) {
                 await supabase.from('news').update(newData).eq('id', id);
             } else {
-                newData.createdAt = new Date().toISOString();
                 await supabase.from('news').insert([newData]);
             }
             newsModal.classList.remove('active');
@@ -432,9 +456,8 @@ window.editNews = (id) => {
     const n = newsData.find(x => x.id == id);
     if (!n) return;
     document.getElementById('newsId').value = n.id;
-    // ... (values mapping similar to tour)
     document.getElementById('inpNewsTitle').value = n.title;
-    document.getElementById('inpNewsDate').value = n.publishedAt;
+    document.getElementById('inpNewsDate').value = n.publishedAt || n.publishedat;
     document.getElementById('inpNewsBody').value = n.body;
     fillTourSelect();
     newsModal.classList.add('active');
@@ -458,7 +481,6 @@ function fillTourSelect() {
     });
 }
 
-// Helper methods from before
 window.toggleNewsType = () => {
     const val = document.querySelector('input[name="newsType"]:checked').value;
     document.getElementById('newsTypeNormal').classList.toggle('u-hidden', val !== 'normal');
@@ -467,10 +489,13 @@ window.toggleNewsType = () => {
 
 window.generateDraft = () => {
     const id = document.getElementById('inpNewsTourId').value;
-    const t = tournaments.find(x => x.id == id); // Loose eq
+    const t = tournaments.find(x => x.id == id);
     if (!t) return;
     
-    // Create draft text...
-    const body = `## ${t.name} エントリー開始！\n\n期間: ${t.entryStart} ~ ${t.entryEnd}`;
+    // Check both camel and snake
+    const start = t.entryStart || t.entry_start;
+    const end = t.entryEnd || t.entry_end;
+    
+    const body = `## ${t.name} エントリー開始！\n\n期間: ${start} ~ ${end}`;
     document.getElementById('inpNewsBody').value = body;
 };

@@ -1,76 +1,56 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Supabase設定
-// 以下の値をSupabase管理画面からコピーしてください
+// --- Supabase Config ---
 const SUPABASE_URL = 'https://cbhfbykyymwhlrnoykvp.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNiaGZieWt5eW13aGxybm95a3ZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU1NTg3NDIsImV4cCI6MjA4MTEzNDc0Mn0.mNv-zBLRk2XdFs81GMWysH4ooE2V18wJWnD-BFqNtVg';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+
+// --- Utils ---
 export function parseMarkdown(text) {
     if (!text) return '';
-// ... (keep creating logic)
-    // Nested logic: Bold/Italic first, then Link, then List?
-    // Regex is tricky for nested. Alternative:
-    // 1. Headers
-    // 2. Bold/Italic/Underline/Strike
-    // 3. Links (allow tags inside text part)
-    // 4. List
-    // 5. Newline
-
     let html = text
         .replace(/^# (.*$)/gm, '<h2>$1</h2>')
         .replace(/^## (.*$)/gm, '<h3>$1</h3>')
         .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
         .replace(/__(.*?)__/gim, '<u>$1</u>')
         .replace(/~~(.*?)~~/gim, '<s>$1</s>')
-        // Link: [text](time) -> Allow tags in text part. Non-greedy match for text `(.*?)`
         .replace(/\[(.*?)\]\(([^)]+)\)/gim, '<a href="$2" target="_blank">$1</a>')
         .replace(/^- (.*$)/gm, '<li>$1</li>')
         .replace(/\n/g, '<br>');
-    
     return html;
 }
 
-// ローディング＆スクロールアニメーションロジック
+// Loading & Scroll Logic
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. ローディング
-    // セッションでの初回訪問、またはリロード時のみ表示
     const isSessionVisited = sessionStorage.getItem('dhp_visited');
     const navEntry = performance.getEntriesByType("navigation")[0];
     const isReload = navEntry && navEntry.type === 'reload';
 
     if (!isSessionVisited || isReload) {
         sessionStorage.setItem('dhp_visited', 'true');
-
-        // オーバーレイが存在するか確認し、なければ作成（自動挿入）
         if (!document.querySelector('.loading-overlay')) {
             const overlay = document.createElement('div');
             overlay.classList.add('loading-overlay');
             overlay.innerHTML = '<div class="ink-spinner"></div>';
             document.body.appendChild(overlay);
-            
-            // window load後に確実に隠す
             window.addEventListener('load', () => {
                 setTimeout(() => {
                     overlay.classList.add('hidden');
-                    // DOMから削除するか、単に非表示にする
-                     setTimeout(() => overlay.style.display = 'none', 600);
+                    setTimeout(() => overlay.style.display = 'none', 600);
                 }, 800); 
             });
-            // フォールバック
             setTimeout(() => {
                 overlay.classList.add('hidden');
                 setTimeout(() => overlay.style.display = 'none', 600);
             }, 3000);
         }
     } else {
-        // 表示しない場合は、万が一HTMLにある場合隠す
         const existing = document.querySelector('.loading-overlay');
         if(existing) existing.style.display = 'none';
     }
 
-    // 2. スクロールフェードアップ
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
@@ -79,50 +59,58 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }, { threshold: 0.1 });
-
     document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
 });
 
-// 共通モーダルロジック
-// 共通モーダルロジック: グローバル関数定義 (モジュールロード時に即時定義)
+// Result Modal Logic
 window.openResModal = (t) => {
     const modal = document.getElementById('resModal');
-    if (!modal) {
-        console.error("Result Modal element not found!");
-        return;
-    }
+    if (!modal || !t) return;
     
-    // データがない場合の安全策
-    if(!t) {
-        console.error("openResModal called with no data");
-        return;
-    }
+    // Normalize Properties (Camel or Snake)
+    const winner = t.winner || {}; // If structured JSON
+    // However, in Supabase flat table, properties might be flattened like win_team, win_univ
+    // Let's assume t has flattened properties from DB if loaded from index.js
+    // OR constructed object. I'll handle both.
     
-    const w = t.winner || {};
+    // Values
+    const winTeam = t.win_team || t.winTeam || winner.teamName;
+    const winImage = t.win_image || t.winImage || winner.image;
+    const winUniv = t.win_univ || t.winUniv || winner.univ;
+    const winCircle = t.win_circle || t.winCircle || winner.circle;
+    const winUniv2 = t.win_univ2 || t.winUniv2 || winner.univ2;
+    const winCircle2 = t.win_circle2 || t.winCircle2 || winner.circle2;
+    const winUrl = t.win_url || t.winUrl || winner.url;
+    
+    const members = [];
+    if(t.win_mem1 || t.winMem1) members.push(t.win_mem1 || t.winMem1);
+    if(t.win_mem2 || t.winMem2) members.push(t.win_mem2 || t.winMem2);
+    if(t.win_mem3 || t.winMem3) members.push(t.win_mem3 || t.winMem3);
+    if(t.win_mem4 || t.winMem4) members.push(t.win_mem4 || t.winMem4);
 
-    // 画像
+    // Render Image
     const imgArea = document.getElementById('resImgArea');
-    const imgEl = document.getElementById('resImg'); // imgタグが存在するか確認
-    if (w.image) {
-        if (imgEl) { imgEl.src = w.image; imgEl.style.display = 'block'; }
-        else if (imgArea) imgArea.innerHTML = `<img src="${w.image}" alt="Winner">`;
+    const imgEl = document.getElementById('resImg'); 
+    if (winImage) {
+        if (imgEl) { imgEl.src = winImage; imgEl.style.display = 'block'; }
+        else if (imgArea) imgArea.innerHTML = `<img src="${winImage}" alt="Winner">`;
     } else {
         if (imgEl) imgEl.style.display = 'none';
         else if (imgArea) imgArea.innerHTML = '<span>No Image</span>';
     }
 
-    // チーム名
+    // Team Name
     const teamEl = document.getElementById('resTeam');
-    if (teamEl) teamEl.textContent = w.teamName || 'Team Name';
+    if (teamEl) teamEl.textContent = winTeam || 'Team Name';
     
-    // クロスサークル / 大学
+    // Univ/Circle Info
     const univBox = modal.querySelector('.res-univ-info');
     if (univBox) {
-        let univs = (w.univ || '').split(/\s*\/\s*/).filter(s => s);
-        let circles = (w.circle || '').split(/\s*\/\s*/).filter(s => s);
+        let univs = (winUniv || '').split(/\s*\/\s*/).filter(s => s);
+        let circles = (winCircle || '').split(/\s*\/\s*/).filter(s => s);
 
-        if (w.univ2 && univs.length === 1) univs.push(w.univ2);
-        if (w.circle2 && circles.length === 1) circles.push(w.circle2);
+        if (winUniv2 && univs.length === 1) univs.push(winUniv2);
+        if (winCircle2 && circles.length === 1) circles.push(winCircle2);
         
         if (univs.length > 1 || circles.length > 1) {
             let html = '';
@@ -138,52 +126,64 @@ window.openResModal = (t) => {
             }
             univBox.innerHTML = html;
         } else {
-            univBox.innerHTML = `<span style="font-size:1.2rem; margin-right:5px;">${w.univ || '-'}</span> 
+            univBox.innerHTML = `<span style="font-size:1.2rem; margin-right:5px;">${winUniv || '-'}</span> 
                                  <span style="opacity:0.4; font-weight:300;">|</span> 
-                                 <span style="font-size:1.2rem; margin-left:5px;">${w.circle || '-'}</span>`;
+                                 <span style="font-size:1.2rem; margin-left:5px;">${winCircle || '-'}</span>`;
         }
     }
 
-    // メンバー
+    // Members
     const memArea = document.getElementById('resMembers');
     if (memArea) {
         memArea.innerHTML = '';
-        if (w.members && Array.isArray(w.members)) {
-            w.members.forEach(m => {
-                if (m) memArea.innerHTML += `<span class="res-mem-pill">${m}</span>`;
-            });
-        }
+        members.forEach(m => {
+            memArea.innerHTML += `<span class="res-mem-pill">${m}</span>`;
+        });
     }
 
-    // キャストエリア
+    // Cast Area
     const castArea = document.getElementById('resCastArea');
     if (castArea) {
         let castHtml = '';
-        // キャストカード用ヘルパー
-        const renderCast = (role, p) => {
-            if(!p || !p.name) return '';
-            const icon = p.icon ? `<img src="${p.icon}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : '<div style="width:32px;height:32px;background:#edf2f7;border-radius:50%;"></div>';
+        const renderCast = (role, name, icon, x, yt) => {
+            if(!name) return '';
+            const iconImg = icon ? `<img src="${icon}" style="width:32px; height:32px; border-radius:50%; object-fit:cover;">` : '<div style="width:32px;height:32px;background:#edf2f7;border-radius:50%;"></div>';
             let links = '';
-            if(p.x) links += `<a href="https://twitter.com/${p.x.replace('@','')}" target="_blank" class="cast-link-btn"><svg width="14" height="14"><use href="#icon-x"/></svg></a>`;
-            if(p.yt) links += `<a href="${p.yt}" target="_blank" class="cast-link-btn"><svg width="16" height="16"><use href="#icon-yt"/></svg></a>`;
-            return `<div class="cast-card"><div class="cast-info">${icon}<div><span class="cast-role">${role}</span> <span class="cast-name">${p.name}</span></div></div><div class="cast-links">${links}</div></div>`;
+            // If X/YT are full URLs or IDs, handle simply
+            if(x) links += `<a href="${x.startsWith('http') ? x : 'https://twitter.com/'+x.replace('@','')}" target="_blank" class="cast-link-btn"><svg width="14" height="14"><use href="#icon-x"/></svg></a>`;
+            if(yt) links += `<a href="${yt}" target="_blank" class="cast-link-btn"><svg width="16" height="16"><use href="#icon-yt"/></svg></a>`;
+            return `<div class="cast-card"><div class="cast-info">${iconImg}<div><span class="cast-role">${role}</span> <span class="cast-name">${name}</span></div></div><div class="cast-links">${links}</div></div>`;
         };
 
-        if (t.caster && t.caster.name) castHtml += renderCast('実況', t.caster);
-        if (t.commentator && t.commentator.name) castHtml += renderCast('解説', t.commentator);
+        // Caster
+        const cn = t.caster_name || t.casterName;
+        const ci = t.caster_icon || t.casterIcon;
+        const cx = t.caster_x || t.casterX;
+        const cyt = t.caster_yt || t.casterYt;
+        castHtml += renderCast('実況', cn, ci, cx, cyt);
 
-        if (t.operator) castHtml += `<div style="margin-bottom:5px; font-size:0.9rem; margin-top:10px;"><strong>配信:</strong> ${t.operator}</div>`;
-        if (t.license) castHtml += `<div style="font-size:0.75rem; color:#a0aec0;">許諾番号: ${t.license}</div>`;
+        // Commentator
+        const comn = t.com_name || t.comName;
+        const comi = t.com_icon || t.comIcon;
+        const comx = t.com_x || t.comX;
+        const comyt = t.com_yt || t.comYt;
+        castHtml += renderCast('解説', comn, comi, comx, comyt);
+
+        const op = t.operator;
+        const lic = t.license;
+        if (op) castHtml += `<div style="margin-bottom:5px; font-size:0.9rem; margin-top:10px;"><strong>配信:</strong> ${op}</div>`;
+        if (lic) castHtml += `<div style="font-size:0.75rem; color:#a0aec0;">許諾番号: ${lic}</div>`;
 
         castArea.innerHTML = castHtml;
     }
 
-    // ボタン
+    // Buttons
     const archiveBtn = document.getElementById('resArchiveBtn');
     if (archiveBtn) {
+        const aUrl = t.archive_url || t.archiveUrl;
         archiveBtn.className = 'btn-res-rich btn-res-archive';
-        if (t.archiveUrl) {
-            archiveBtn.href = t.archiveUrl;
+        if (aUrl) {
+            archiveBtn.href = aUrl;
             archiveBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg> 配信アーカイブを見る';
             archiveBtn.style.display = 'flex';
         } else {
@@ -194,8 +194,8 @@ window.openResModal = (t) => {
     const linkBtn = document.getElementById('resLink');
     if (linkBtn) {
         linkBtn.className = 'btn-res-rich btn-res-post';
-        if (w.url) {
-            linkBtn.href = w.url;
+        if (winUrl) {
+            linkBtn.href = winUrl;
             linkBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg> 優勝ポストを見る';
             linkBtn.style.display = 'flex';
         } else {
@@ -211,41 +211,21 @@ window.closeResModal = () => {
     if (modal) modal.classList.remove('active');
 };
 
-// 大会カードクリックのグローバルハンドラ
 window.handleTourClick = (id) => {
-    // 呼び出し元で window._tournamentsData を設定する必要がある
-    console.log("Clicked tour id:", id);
+    if (!window._tournamentsData) return;
+    const t = window._tournamentsData.find(x => x.id == id); // Use == for string/int match
+    if (!t) return;
 
-    if (!window._tournamentsData) {
-        console.error("Window tournaments data not found");
-        return;
-    }
-    const t = window._tournamentsData.find(x => x.id === id);
-    if (!t) {
-        console.error("Tournament not found in data for id:", id);
-        return;
-    }
-    console.log("Tournament Found:", t);
-
-    // ロジック
-    // ステータス: open -> entry.html
-    // closed -> modal
-    // upcoming -> news.html (or alert?)
-    
     if (t.status === 'closed') {
         window.openResModal(t);
     } else if (t.status === 'open') {
-        console.log("Navigating to entry...");
         location.href = `entry.html?id=${t.id}`; 
     } else {
-        // upcoming or others
-        console.log("Navigating to news...");
-        location.href = 'news.html'; // または 'tournaments.html' etc
+        location.href = 'news.html';
     }
 };
 
 export function setupResModal() {
-    // 外部クリックで閉じるリスナーの登録のみ
     const m = document.getElementById('resModal');
     if (m) {
         m.addEventListener('click', (e) => {
@@ -257,26 +237,36 @@ export function setupResModal() {
 export function generateTourCard(t) {
     let statusBadge = '';
     let statusLabel = '';
+    
     if (t.status === 'open') { statusBadge = 'status-open'; statusLabel = 'エントリー受付中'; }
     else if (t.status === 'upcoming') { statusBadge = 'status-upcoming'; statusLabel = '開催予定'; }
     else { statusBadge = 'status-closed'; statusLabel = '終了'; }
 
-    const ruleStr = (t.rules && Array.isArray(t.rules)) ? t.rules.join(' / ') : 'ルール未定';
+    const rules = t.rules || [];
+    const ruleStr = Array.isArray(rules) ? rules.join(' / ') : 'ルール未定';
+    
+    // Normalize EntryType
+    const et = t.entry_type || t.entryType;
     let entryTypeStr = '参加制限なし';
-    if (t.entryType === 'circle_only') entryTypeStr = '同一サークル限定';
-    else if (t.entryType === 'cross_ok') entryTypeStr = 'クロスサークルOK';
-    else if (t.entryType === 'invite') entryTypeStr = 'サークル選抜';
+    if (et === 'circle_only') entryTypeStr = '同一サークル限定';
+    else if (et === 'cross_ok') entryTypeStr = 'クロスサークルOK';
+    else if (et === 'invite') entryTypeStr = 'サークル選抜';
 
-    const d = t.eventDate ? new Date(t.eventDate) : null;
+    // Normalize Date
+    const dateVal = t.event_date || t.eventDate;
+    const d = dateVal ? new Date(dateVal) : null;
     const dateStr = d ? `${d.getFullYear()}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getDate().toString().padStart(2, '0')} (${['日', '月', '火', '水', '木', '金', '土'][d.getDay()]}) ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}` : '日程調整中';
     const dateClass = (d && t.status !== 'closed') ? 'tour-date-stress' : '';
 
-    let castInfoHtml = '';
-    if (t.caster && t.caster.name) castInfoHtml += `<div class="cast-line"><span class="cast-label">実況</span> ${t.caster.name}</div>`;
-    if (t.commentator && t.commentator.name) castInfoHtml += `<div class="cast-line mt-2"><span class="cast-label">解説</span> ${t.commentator.name}</div>`;
+    // Normalize Cast
+    const cName = t.caster_name || t.casterName;
+    const comName = t.com_name || t.comName;
 
-    let cursorStyle = "";
-    if (t.status === 'closed' || t.status === 'open' || t.status === 'upcoming') cursorStyle = "cursor:pointer;";
+    let castInfoHtml = '';
+    if (cName) castInfoHtml += `<div class="cast-line"><span class="cast-label">実況</span> ${cName}</div>`;
+    if (comName) castInfoHtml += `<div class="cast-line mt-2"><span class="cast-label">解説</span> ${comName}</div>`;
+
+    let cursorStyle = "cursor:pointer;";
 
     return `
     <div class="tour-card" onclick="window.handleTourClick('${t.id}')" style="${cursorStyle}">
@@ -306,4 +296,3 @@ export function generateTourCard(t) {
     </div>
     `;
 }
-

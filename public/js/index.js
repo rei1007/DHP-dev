@@ -12,34 +12,30 @@ async function loadTournaments() {
     const list = document.getElementById('tourList');
     if (!list) return;
 
-    // ローディング
     list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">Loading...</div>';
 
     try {
-        // Supabaseから取得
-        // カラム名はPostgresの仕様(小文字)とadmin.jsの送信(キャメル)の不一致を防ぐため
-        // select('*') で返る実際のキーを使うよう注意
+        // Supabaseから取得 (CamelCaseのカラム名を送ったのでCamelCaseで返るはずだが、念のため両対応)
         const { data, error } = await supabase
             .from('tournaments')
-            .select('*')
-            // eventDate or eventdate の並び替え。
-            // Supabaseでは .order('eventDate',...) でカラムが存在すればOK。
-            // ここではJS側でソートしているので、単純に全件取得してからソート推奨
             .select('*');
 
         if (error) throw error;
 
         allTournaments = data.map(doc => {
-            // カラム名の揺らぎ吸収 (camelCase vs lowercase)
+            // カラム名の揺らぎ吸収 (Camel or Snake)
             return {
                 ...doc,
-                eventDate: doc.eventDate || doc.eventdate,
-                entryEnd: doc.entryEnd || doc.entryend,
-                entryStart: doc.entryStart || doc.entrystart
+                // Normalized properties for sort & display
+                eventDate: doc.eventDate || doc.event_date || doc.eventdate,
+                status: doc.status || 'upcoming',
+                entryEnd: doc.entryEnd || doc.entry_end || doc.entryend,
+                rules: doc.rules || [],
+                name: doc.name || '名称未設定'
             };
         });
 
-        // モーダル用にグローバル保存 (handleTourClickで使用)
+        // モーダル用にグローバル保存
         window._tournamentsData = allTournaments;
 
         // 初期レンダリング
@@ -61,7 +57,6 @@ function renderTourList() {
     // クライアント側ソート: 受付中 -> 開催予定 -> 終了
     const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
     
-    // まず全てソート
     let sortedTours = [...allTournaments];
     sortedTours.sort((a, b) => {
         const sA = statusOrder[a.status] || 99;
@@ -80,10 +75,8 @@ function renderTourList() {
          const upcomings = sortedTours.filter(t => t.status === 'upcoming');
          const closeds = sortedTours.filter(t => t.status === 'closed');
          
-         // ベース: 全ての「受付中」+「開催予定」
          let base = [...opens, ...upcomings];
          
-         // 最新の「終了」が1つあれば追加
          if (closeds.length > 0) {
              base.push(closeds[0]);
          }
@@ -101,11 +94,11 @@ function renderTourList() {
              }
          }
     } else {
-        // PC: 厳密に6件制限
+        // PC: 6件制限
         displayTours = sortedTours.slice(0, 6);
     }
     
-    // 表示用に再ソート
+    // 表示用再ソート
     displayTours.sort((a, b) => {
         const sA = statusOrder[a.status] || 99;
         const sB = statusOrder[b.status] || 99;
@@ -115,15 +108,13 @@ function renderTourList() {
         return dB - dA;
     });
 
-    // 共通関数を使用してHTML生成
     let html = '';
     displayTours.forEach(t => {
+        // common.js の generateTourCard を呼ぶ
         html += generateTourCard(t);
     });
 
     list.innerHTML = html;
-
-    // CTAバー更新
     updateCtaBar(displayTours);
 }
 
@@ -141,12 +132,10 @@ function updateCtaBar(data) {
     const ctaBar = document.getElementById('ctaBar');
     if (!ctaBar) return;
 
-    // 受付中の大会を検索
     const openTours = data.filter(t => t.status === 'open');
     let targetTour = null;
 
     if (openTours.length > 0) {
-        // 締切昇順でソート
         openTours.sort((a, b) => {
             const tA = a.entryEnd ? new Date(a.entryEnd).getTime() : 9999999999999;
             const tB = b.entryEnd ? new Date(b.entryEnd).getTime() : 9999999999999;
@@ -174,15 +163,13 @@ function updateCtaBar(data) {
             <div class="u-text-sm u-mb-10">${targetTour.name}</div>
             <a href="entry.html?id=${targetTour.id}" class="btn-cta">エントリー</a>
         `;
-        checkCtaVisibility(); // 初期チェック
+        checkCtaVisibility(); 
     } else {
         ctaBar.innerHTML = ''; 
         ctaBar.classList.add('hidden');
     }
 }
 
-
-// 表示確認関数
 function checkCtaVisibility() {
     const ctaBar = document.getElementById('ctaBar');
     if (!ctaBar || ctaBar.innerHTML.trim() === "") return;
@@ -191,19 +178,16 @@ function checkCtaVisibility() {
     const winHeight = window.innerHeight;
     const docHeight = document.body.scrollHeight;
 
-    // 上部で隠す (最初の500px)
     if (scrollY < 500) {
         ctaBar.classList.add('hidden');
         return;
     }
     
-    // 下部で隠す (フッター付近)
     if ((scrollY + winHeight) >= (docHeight - 100)) {
         ctaBar.classList.add('hidden');
         return;
     }
 
-    // 表示
     ctaBar.classList.remove('hidden');
 }
 
@@ -217,27 +201,23 @@ async function loadIndexNews() {
     const heroNewsContainer = document.getElementById('heroNewsContainer');
 
     try {
-        // Supabase query
-        // order by publishedAt (admin.js sets this)
-        // or publishedat
         const { data, error } = await supabase
             .from('news')
             .select('*')
-            .order('publishedAt', { ascending: false })
+            .order('publishedAt', { ascending: false }) // Postgres sorts quoted identifier properly if used
             .limit(5);
 
         if (error) throw error;
         
         const news = data.map(n => ({
             ...n,
-            date: n.publishedAt || n.publishedat || n.date // normalize to 'date' for display logic
+            date: n.publishedAt || n.publishedat || n.date
         }));
 
         if (news.length === 0) {
             if (newsList) newsList.innerHTML = '<div style="padding:20px; text-align:center; color:#a0aec0;">お知らせはありません</div>';
         }
         
-        // ヒーローニュース (最新1件)
         const latest = news[0];
         if (latest && heroNewsContainer) {
             let badgeClass = 'badge-info';
@@ -256,7 +236,6 @@ async function loadIndexNews() {
             `;
         }
 
-        // リスト
         if (newsList && news.length > 0) {
             let html = '';
             news.forEach(n => {
@@ -281,28 +260,8 @@ async function loadIndexNews() {
             newsList.innerHTML = html;
         }
 
-    } catch (e) { console.error('News load error', e); }
+    } catch (e) { 
+        console.error('News load error', e); 
+        if (newsList) newsList.innerHTML = 'Error loading news';
+    }
 }
-
-// モバイルメニューロジック
-const hamBtn = document.getElementById('hamBtn');
-const mobMenu = document.getElementById('mobMenu');
-const closeMob = document.getElementById('closeMob');
-
-if (hamBtn && mobMenu && closeMob) {
-    hamBtn.addEventListener('click', () => {
-        mobMenu.classList.add('is-active');
-    });
-    closeMob.addEventListener('click', () => {
-        mobMenu.classList.remove('is-active');
-    });
-    // リンククリックで閉じる
-    mobMenu.querySelectorAll('a').forEach(link => {
-        link.addEventListener('click', () => {
-            mobMenu.classList.remove('is-active');
-        });
-    });
-}
-
-// スクロールイベント
-window.addEventListener('scroll', checkCtaVisibility);
