@@ -1,6 +1,6 @@
 // Cloudflare Workers (Pages Functions) での Firebase Custom Token 発行ロジック
 
-// Base64URLエンコード (k, v -> string)
+// Base64URLエンコード
 function b64url(str) {
     return btoa(String.fromCharCode(...new Uint8Array(new TextEncoder().encode(str))))
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
@@ -8,50 +8,59 @@ function b64url(str) {
 
 // 鍵インポート (PEM -> CryptoKey)
 async function importPrivateKey(pem) {
-    // PEMヘッダー/フッター削除 & 改行削除
-    const pemContents = pem
-        .replace(/-----BEGIN PRIVATE KEY-----/, '')
-        .replace(/-----END PRIVATE KEY-----/, '')
-        .replace(/\s/g, '');
-        
-    const binaryDerString = atob(pemContents);
-    const binaryDer = new Uint8Array(binaryDerString.length);
-    for (let i = 0; i < binaryDerString.length; i++) {
-        binaryDer[i] = binaryDerString.charCodeAt(i);
+    try {
+        // ヘッダー・フッター・改行・スペースをすべて削除してBase64本文のみ抽出
+        const pemContents = pem
+            .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+            .replace(/-----END PRIVATE KEY-----/g, '')
+            .replace(/\s+/g, '');
+
+        const binaryDerString = atob(pemContents);
+        const binaryDer = new Uint8Array(binaryDerString.length);
+        for (let i = 0; i < binaryDerString.length; i++) {
+            binaryDer[i] = binaryDerString.charCodeAt(i);
+        }
+
+        return await crypto.subtle.importKey(
+            "pkcs8",
+            binaryDer.buffer,
+            { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
+            false,
+            ["sign"]
+        );
+    } catch (e) {
+        throw new Error("Private Key Import Failed: " + e.message);
     }
-    
-    return await crypto.subtle.importKey(
-        "pkcs8",
-        binaryDer.buffer,
-        { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
-        false,
-        ["sign"]
-    );
 }
 
 // JWT生成
 async function createCustomToken(uid, email, privateKeyPem) {
     const now = Math.floor(Date.now() / 1000);
     const header = { alg: "RS256", typ: "JWT" };
+    
+    // Firebase Custom Token 必須クレーム
     const payload = {
         iss: email,
         sub: email,
         aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",
         iat: now,
-        exp: now + 3600, // 1時間
-        uid: uid,
-        claims: { is_admin: true } // 管理者フラグ
+        exp: now + 3600,
+        uid: String(uid), // 文字列である必要がある
+        claims: { is_admin: true } 
     };
 
     const encodedHeader = b64url(JSON.stringify(header));
     const encodedPayload = b64url(JSON.stringify(payload));
     const data = new TextEncoder().encode(`${encodedHeader}.${encodedPayload}`);
 
-    const key = await importPrivateKey(privateKeyPem);
-    const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, data);
-    const encodedSignature = b64url(String.fromCharCode(...new Uint8Array(signature)));
-
-    return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
+    try {
+        const key = await importPrivateKey(privateKeyPem);
+        const signature = await crypto.subtle.sign("RSASSA-PKCS1-v1_5", key, data);
+        const encodedSignature = b64url(String.fromCharCode(...new Uint8Array(signature)));
+        return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
+    } catch (e) {
+        throw new Error("Token Signing Failed: " + e.message);
+    }
 }
 
 export async function onRequest(context) {
