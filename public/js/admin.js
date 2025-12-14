@@ -1,4 +1,5 @@
-import { db } from "./common.js";
+import { db, auth } from "./common.js";
+import { signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 const colRef = collection(db, "tournaments");
 
@@ -12,49 +13,61 @@ const STAGES = [
     "バイガイ亭", "ネギトロ炭鉱", "カジキ空港", "リュウグウターミナル", "デカライン高架下"
 ];
 
-// グローバル関数への紐付け (モジュールスコープ対策)
-window.proceedLogin = () => {
-    localStorage.setItem('dhp_auth_ok', 'true');
-    window.showDash();
-};
-
+// グローバル関数への紐付け
 window.showDash = () => {
     document.getElementById('loginView').classList.add('u-hidden');
     document.getElementById('dashView').classList.remove('u-hidden');
     loadData();
 };
 
-// UI初期化
+window.proceedLogin = () => {
+    window.showDash();
+};
+
+// ログアウト機能
+window.doLogout = () => {
+    signOut(auth).then(() => {
+        location.reload();
+    });
+};
+
+// UI・ステータス初期化
 const ruleGroup = document.getElementById('ruleGroup');
-RULES.forEach(r => {
-    const lbl = document.createElement('label');
-    lbl.className = 'checkbox-label';
-    lbl.innerHTML = `<input type="checkbox" name="rule" value="${r}"> ${r}`;
-    ruleGroup.appendChild(lbl);
-});
+if(ruleGroup) {
+    RULES.forEach(r => {
+        const lbl = document.createElement('label');
+        lbl.className = 'checkbox-label';
+        lbl.innerHTML = `<input type="checkbox" name="rule" value="${r}"> ${r}`;
+        ruleGroup.appendChild(lbl);
+    });
+}
 
 const stageGroup = document.getElementById('stageGroup');
-STAGES.forEach(s => {
-    const lbl = document.createElement('label');
-    lbl.className = 'checkbox-label';
-    lbl.innerHTML = `<input type="checkbox" name="stage" value="${s}"> ${s}`;
-    stageGroup.appendChild(lbl);
-});
+if(stageGroup) {
+    STAGES.forEach(s => {
+        const lbl = document.createElement('label');
+        lbl.className = 'checkbox-label';
+        lbl.innerHTML = `<input type="checkbox" name="stage" value="${s}"> ${s}`;
+        stageGroup.appendChild(lbl);
+    });
+}
 
 // XP切替ロジック
 const chkXpNone = document.getElementById('chkXpNone');
 const xpInputs = document.getElementById('xpInputs');
-chkXpNone.addEventListener('change', () => {
-    if (chkXpNone.checked) {
-        xpInputs.classList.add('u-disabled');
-        document.getElementById('inpXpAvg').value = '';
-        document.getElementById('inpXpMax').value = '';
-    } else {
-        xpInputs.classList.remove('u-disabled');
-    }
-});
+if(chkXpNone) {
+    chkXpNone.addEventListener('change', () => {
+        if (chkXpNone.checked) {
+            xpInputs.classList.add('u-disabled');
+            document.getElementById('inpXpAvg').value = '';
+            document.getElementById('inpXpMax').value = '';
+        } else {
+            xpInputs.classList.remove('u-disabled');
+        }
+    });
+}
 
-// グローバル状態 & UI要素 (TDZ回避のため早期宣言)
+// グローバル状態
 let tournaments = [];
 const tList = document.getElementById('tList');
 const loader = document.getElementById('loader');
@@ -72,42 +85,35 @@ window.calcStatus = (force = false) => {
     const eDate = new Date(end);
 
     let newStatus = 'upcoming';
-    if (now < sDate) {
-        newStatus = 'upcoming';
-    } else if (now >= sDate && now <= eDate) {
-        newStatus = 'open';
-    } else {
-        newStatus = 'closed';
-    }
+    if (now < sDate) newStatus = 'upcoming';
+    else if (now >= sDate && now <= eDate) newStatus = 'open';
+    else newStatus = 'closed';
+    
     statusEl.value = newStatus;
 };
 
-// グローバルリスナー初期化 (即時実行)
-// 認証ロジック (Discord)
+// --- 認証ロジック (Discord + Firebase Auth) ---
 const loginBtn = document.getElementById('btnLoginDiscord');
 const loginMsg = document.getElementById('loginMsg');
 
-// 1. ログインボタンクリック
+// 1. ログインボタン
 if (loginBtn) {
     loginBtn.addEventListener('click', async () => {
         loginBtn.disabled = true;
         loginBtn.textContent = '接続中...';
         try {
-            // 生成された認証URLをAPIから取得 (クライアントID隠蔽のため)
-            // または直接環境変数がフロントにないのでAPI経由が安全
             const res = await fetch('/api/discord');
             const data = await res.json();
             if (data.url) {
                 window.location.href = data.url;
             } else {
-                loginMsg.textContent = '設定エラー: 認証URLが取得できません';
+                loginMsg.textContent = '設定エラー: 認証URL取得失敗';
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Discordでログイン';
             }
         } catch (e) {
             console.error(e);
             loginMsg.textContent = 'エラー: ' + e.message;
-            // Fallback for local testing if API fails
             if (e.message.includes('Failed to fetch')) {
                  const pass = prompt("開発用パスワード(API接続不可):");
                  if(pass === 'admin1234') proceedLogin();
@@ -118,46 +124,44 @@ if (loginBtn) {
     });
 }
 
-// 2. コールバック処理 (URLに ?code=... がある場合)
+// 2. コールバック (Discordからの戻り)
 const params = new URLSearchParams(window.location.search);
 const code = params.get('code');
 
 if (code) {
-    // 画面をローディング状態に
-    if(loginBtn) {
-        loginBtn.disabled = true;
-        loginBtn.textContent = '認証中...';
-    }
+    if(loginBtn) { loginBtn.disabled = true; loginBtn.textContent = '認証中...'; }
     
-    // APIにコードを送信して検証
     fetch(`/api/discord?code=${code}`)
         .then(async (res) => {
             const data = await res.json();
-            if (data.success) {
-                // 成功
-                localStorage.setItem('dhp_auth_ok', 'true');
-                localStorage.setItem('dhp_user', JSON.stringify(data.user));
-                // URLを綺麗にする
-                window.history.replaceState({}, document.title, window.location.pathname);
-                proceedLogin();
+            if (data.success && data.firebase_token) {
+                // Firebaseへサインイン
+                return signInWithCustomToken(auth, data.firebase_token);
             } else {
-                loginMsg.textContent = 'ログイン失敗: ' + (data.error || '不明なエラー');
-                if(data.user) loginMsg.textContent += ` (ID: ${data.user.id})`;
-                loginBtn.disabled = false;
-                loginBtn.textContent = 'Discordでログイン';
+                throw new Error(data.error || 'Token取得失敗');
             }
+        })
+        .then(() => {
+            // 成功: URLパラメータ削除
+            window.history.replaceState({}, document.title, window.location.pathname);
+            // onAuthStateChangedが発火して画面遷移する
         })
         .catch(err => {
             console.error(err);
-            loginMsg.textContent = '通信エラー';
-            loginBtn.disabled = false;
-            loginBtn.textContent = 'Discordでログイン';
+            loginMsg.textContent = '認証失敗: ' + err.message;
+            if(loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Discordでログイン'; }
         });
 }
 
-// ステータス初期化
-const storedAuth = localStorage.getItem('dhp_auth_ok');
-if (storedAuth === 'true') { window.showDash(); }
+// 3. 認証状態監視 (永続化)
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("Logged in as:", user.uid);
+        window.showDash();
+    } else {
+        // 未ログイン時: 何もしない (ログイン画面のまま)
+    }
+});
 
 // showDash and proceedLogin are defined globally above.
 
