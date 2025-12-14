@@ -9,8 +9,12 @@ function b64url(str) {
 // 鍵インポート (PEM -> CryptoKey)
 async function importPrivateKey(pem) {
     try {
+        if (!pem) throw new Error("Private Key is empty or undefined");
+        
         // Base64文字以外をすべて削除 (ヘッダー、フッター、改行、スペース、エスケープ文字対策)
         const pemContents = pem.replace(/[^a-zA-Z0-9+/=]/g, '');
+        
+        if (pemContents.length === 0) throw new Error("Private Key content is empty after sanitization");
 
         const binaryDerString = atob(pemContents);
         const binaryDer = new Uint8Array(binaryDerString.length);
@@ -144,6 +148,11 @@ export async function onRequest(context) {
     }
 
   } catch (err) {
-    return new Response(JSON.stringify({ error: "Server Error", message: err.message, stack: err.stack }), { status: 500 });
+    return new Response(JSON.stringify({ 
+        error: "Server Error", 
+        message: err.message, 
+        stack: err.stack,
+        details: err.toString() 
+    }), { status: 500 });
   }
 }
