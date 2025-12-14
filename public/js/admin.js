@@ -82,43 +82,82 @@ window.calcStatus = (force = false) => {
     statusEl.value = newStatus;
 };
 
-// グローバルリスナー初期化
-document.addEventListener('DOMContentLoaded', () => {
-    // 認証
-    const loginForm = document.getElementById('loginForm');
-    if(loginForm) {
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const pass = document.getElementById('adminPass').value;
-            try {
-                const res = await fetch('/api/auth', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: pass })
-                });
+// グローバルリスナー初期化 (即時実行)
+// 認証ロジック (Discord)
+const loginBtn = document.getElementById('btnLoginDiscord');
+const loginMsg = document.getElementById('loginMsg');
 
-                if (res.ok) {
-                    proceedLogin();
-                } else {
-                    document.getElementById('loginMsg').textContent = 'パスワードが違います';
-                }
-            } catch (err) {
-                // admin1234 case fallback (API unreachable)
-                if (pass === 'admin1234') {
-                    console.warn("API unreachable, allowing admin1234");
-                    proceedLogin();
-                } else {
-                    document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
-                }
+// 1. ログインボタンクリック
+if (loginBtn) {
+    loginBtn.addEventListener('click', async () => {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '接続中...';
+        try {
+            // 生成された認証URLをAPIから取得 (クライアントID隠蔽のため)
+            // または直接環境変数がフロントにないのでAPI経由が安全
+            const res = await fetch('/api/discord');
+            const data = await res.json();
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                loginMsg.textContent = '設定エラー: 認証URLが取得できません';
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Discordでログイン';
             }
-        });
+        } catch (e) {
+            console.error(e);
+            loginMsg.textContent = 'エラー: ' + e.message;
+            // Fallback for local testing if API fails
+            if (e.message.includes('Failed to fetch')) {
+                 const pass = prompt("開発用パスワード(API接続不可):");
+                 if(pass === 'admin1234') proceedLogin();
+            }
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Discordでログイン';
+        }
+    });
+}
+
+// 2. コールバック処理 (URLに ?code=... がある場合)
+const params = new URLSearchParams(window.location.search);
+const code = params.get('code');
+
+if (code) {
+    // 画面をローディング状態に
+    if(loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.textContent = '認証中...';
     }
     
-    // ステータス初期化
-    const storedAuth = localStorage.getItem('dhp_auth_ok');
-    if (storedAuth === 'true') { window.showDash(); }
+    // APIにコードを送信して検証
+    fetch(`/api/discord?code=${code}`)
+        .then(async (res) => {
+            const data = await res.json();
+            if (data.success) {
+                // 成功
+                localStorage.setItem('dhp_auth_ok', 'true');
+                localStorage.setItem('dhp_user', JSON.stringify(data.user));
+                // URLを綺麗にする
+                window.history.replaceState({}, document.title, window.location.pathname);
+                proceedLogin();
+            } else {
+                loginMsg.textContent = 'ログイン失敗: ' + (data.error || '不明なエラー');
+                if(data.user) loginMsg.textContent += ` (ID: ${data.user.id})`;
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Discordでログイン';
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            loginMsg.textContent = '通信エラー';
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Discordでログイン';
+        });
+}
 
-});
+// ステータス初期化
+const storedAuth = localStorage.getItem('dhp_auth_ok');
+if (storedAuth === 'true') { window.showDash(); }
 
 // showDash and proceedLogin are defined globally above.
 

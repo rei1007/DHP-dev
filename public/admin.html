@@ -20,10 +20,12 @@
         <div class="card login-card">
             <h1 class="login-title">運営ダッシュボード</h1>
             <p class="u-mb-20 u-text-sm">管理用パスワードを入力してください</p>
-            <form id="loginForm">
-                <input type="password" id="adminPass" placeholder="Password" required>
-                <button type="submit" class="btn">ログイン</button>
-            </form>
+            <div id="loginArea">
+                <button id="btnLoginDiscord" class="btn"
+                    style="background-color: #5865F2; width: 100%; font-weight: bold;">
+                    Discordでログイン
+                </button>
+            </div>
             <p id="loginMsg" class="u-text-red u-mt-10 u-text-xs"></p>
         </div>
     </div>
