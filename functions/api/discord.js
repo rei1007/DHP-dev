@@ -9,11 +9,8 @@ function b64url(str) {
 // 鍵インポート (PEM -> CryptoKey)
 async function importPrivateKey(pem) {
     try {
-        // ヘッダー・フッター・改行・スペースをすべて削除してBase64本文のみ抽出
-        const pemContents = pem
-            .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-            .replace(/-----END PRIVATE KEY-----/g, '')
-            .replace(/\s+/g, '');
+        // Base64文字以外をすべて削除 (ヘッダー、フッター、改行、スペース、エスケープ文字対策)
+        const pemContents = pem.replace(/[^a-zA-Z0-9+/=]/g, '');
 
         const binaryDerString = atob(pemContents);
         const binaryDer = new Uint8Array(binaryDerString.length);
@@ -29,7 +26,8 @@ async function importPrivateKey(pem) {
             ["sign"]
         );
     } catch (e) {
-        throw new Error("Private Key Import Failed: " + e.message);
+        // キーのフォーマットエラーが最も多い原因
+        throw new Error("Private Key Import Failed. Check Env Var syntax. Details: " + e.message);
     }
 }
 
@@ -38,14 +36,22 @@ async function createCustomToken(uid, email, privateKeyPem) {
     const now = Math.floor(Date.now() / 1000);
     const header = { alg: "RS256", typ: "JWT" };
     
-    // Firebase Custom Token 必須クレーム
+    // Firebase Custom Token
+    // audはidentitytoolkitのURLではなく、プロジェクトIDを指定するのが正解 (Service Account署名の場合)
+    // https://firebase.google.com/docs/auth/admin/create-custom-tokens#create_custom_tokens_using_the_firebase_admin_sdk
+    // Admin SDKを使わない場合は詳細仕様に従う必要がある:
+    // aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit" が標準だが、
+    // エラーが出る場合は projectId 単体を試す価値あり
+    // しかし公式には URL が必須。
+    // 再確認: ServiceAccountのemailがissとsub、audはURL。
+    
     const payload = {
         iss: email,
         sub: email,
         aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",
         iat: now,
         exp: now + 3600,
-        uid: String(uid), // 文字列である必要がある
+        uid: String(uid),
         claims: { is_admin: true } 
     };
 
