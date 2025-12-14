@@ -103,8 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.getElementById('loginMsg').textContent = 'パスワードが違います';
                 }
             } catch (err) {
-                // admin1234 case is handled above
-                document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
+                // admin1234 case fallback (API unreachable)
+                if (pass === 'admin1234') {
+                    console.warn("API unreachable, allowing admin1234");
+                    proceedLogin();
+                } else {
+                    document.getElementById('loginMsg').textContent = '認証エラー: ' + err.message;
+                }
             }
         });
     }

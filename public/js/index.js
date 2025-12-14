@@ -158,7 +158,8 @@ function updateCtaBar(data) {
         `;
         checkCtaVisibility(); // 初期チェック
     } else {
-        ctaBar.classList.add('hidden'); // データなし -> 非表示
+        ctaBar.innerHTML = ''; // コンテンツをクリアして非表示を維持
+        ctaBar.classList.add('hidden');
     }
 }
 
