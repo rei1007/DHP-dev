@@ -138,7 +138,11 @@ if (code) {
                 // Firebaseへサインイン
                 return signInWithCustomToken(auth, data.firebase_token);
             } else {
-                throw new Error(data.error || 'Token取得失敗');
+                // エラー詳細を結合して表示
+                let msg = data.error || 'Token取得失敗';
+                if (data.message) msg += `\n[Msg] ${data.message}`;
+                if (data.details) msg += `\n[Details] ${data.details}`;
+                throw new Error(msg);
             }
         })
         .then(() => {
