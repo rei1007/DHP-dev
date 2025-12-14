@@ -231,6 +231,10 @@ export function setupResModal() {
         m.addEventListener('click', (e) => {
             if (e.target === m) window.closeResModal();
         });
+        const closeBtn = document.getElementById('btnResClose');
+        if(closeBtn) {
+            closeBtn.addEventListener('click', window.closeResModal);
+        }
     }
 }
 
@@ -269,7 +273,7 @@ export function generateTourCard(t) {
     let cursorStyle = "cursor:pointer;";
 
     return `
-    <div class="tour-card" onclick="window.handleTourClick('${t.id}')" style="${cursorStyle}">
+    <div class="tour-card" data-id="${t.id}" style="${cursorStyle}">
         <div class="tour-status ${statusBadge}">${statusLabel}</div>
         <div class="tour-body">
             <div>

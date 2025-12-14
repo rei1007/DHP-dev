@@ -37,8 +37,9 @@
     <!-- 2. ダッシュボード画面 -->
     <div id="dashView" class="dashboard-wrapper u-hidden">
         <div class="u-flex u-gap-10 u-mb-20">
-            <button class="tab-btn is-active" id="tabBtnTour" onclick="switchTab('tour')">大会管理</button>
-            <button class="tab-btn" id="tabBtnNews" onclick="switchTab('news')">お知らせ管理</button>
+            <!-- onclick removed, IDs used -->
+            <button class="tab-btn is-active" id="tabBtnTour">大会管理</button>
+            <button class="tab-btn" id="tabBtnNews">お知らせ管理</button>
         </div>
 
         <!-- 大会タブ -->
@@ -46,7 +47,7 @@
             <div class="dash-header">
                 <div>
                     <h2>大会データ管理</h2>
-                    <div class="u-text-xs u-text-gray">Firestore: tournaments</div>
+                    <div class="u-text-xs u-text-gray">DB: tournaments</div>
                 </div>
                 <button class="btn btn-green" id="btnNew">＋ 新規大会作成</button>
             </div>
@@ -60,7 +61,7 @@
             <div class="dash-header">
                 <div>
                     <h2>お知らせ管理</h2>
-                    <div class="u-text-xs u-text-gray">Firestore: news</div>
+                    <div class="u-text-xs u-text-gray">DB: news</div>
                 </div>
                 <button class="btn btn-green" id="btnNewNews">＋ お知らせ作成</button>
             </div>
@@ -233,11 +234,11 @@
                     <label class="form-label-bold">フォーマット</label>
                     <div class="u-flex u-gap-20 u-mt-5">
                         <label class="u-flex u-items-center u-cursor-pointer">
-                            <input type="radio" name="newsType" value="normal" checked onchange="toggleNewsType()">
+                            <input type="radio" name="newsType" value="normal" checked>
                             通常フォーマット
                         </label>
                         <label class="u-flex u-items-center u-cursor-pointer">
-                            <input type="radio" name="newsType" value="tournament" onchange="toggleNewsType()"> 大会フォーマット
+                            <input type="radio" name="newsType" value="tournament"> 大会フォーマット
                         </label>
                     </div>
                 </div>
@@ -260,7 +261,7 @@
                         <select id="inpNewsTourId" class="u-flex-1">
                             <option value="">大会を選択してください</option>
                         </select>
-                        <button type="button" class="btn btn-sm" onclick="generateDraft()">下書き生成</button>
+                        <button type="button" class="btn btn-sm" id="btnGenDraft">下書き生成</button>
                     </div>
                     <p class="u-text-xs u-text-gray u-mt-5">※大会を選択して「下書き生成」を押すと、本文が自動入力されます。</p>
                 </div>
@@ -292,6 +293,7 @@
         </div>
     </div>
 
+    <!-- 重要: type="module" -->
     <script type="module" src="js/admin.js"></script>
 </body>
 

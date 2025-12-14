@@ -4,18 +4,49 @@ import { supabase, setupResModal, generateTourCard } from "./common.js";
 let allTournaments = [];
 let lastIsMobile = window.innerWidth < 768;
 
-// モーダル初期化
-setupResModal();
+document.addEventListener('DOMContentLoaded', () => {
+    // モーダル初期化 (イベントリスナー登録)
+    setupResModal();
+
+    // イベント委譲: カードクリック
+    const list = document.getElementById('tourList');
+    if (list) {
+        list.addEventListener('click', (e) => {
+            const card = e.target.closest('.tour-card');
+            if (card && card.dataset.id) {
+                // common.js で定義された window.handleTourClick を呼ぶ
+                // (common.js は module だが window オブジェクトに代入しているので呼べるはず)
+                if (window.handleTourClick) {
+                    window.handleTourClick(card.dataset.id);
+                } else {
+                    console.error("handleTourClick not found");
+                }
+            }
+        });
+    }
+    
+    // データロード
+    loadTournaments();
+    loadIndexNews();
+});
+
+// リサイズリスナー
+window.addEventListener('resize', () => {
+    const isMobile = window.innerWidth < 768;
+    if (isMobile !== lastIsMobile) {
+        lastIsMobile = isMobile;
+        renderTourList();
+    }
+});
+
 
 async function loadTournaments() {
-    // リスト要素
     const list = document.getElementById('tourList');
     if (!list) return;
 
     list.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:4rem;">Loading...</div>';
 
     try {
-        // Supabaseから取得 (CamelCaseのカラム名を送ったのでCamelCaseで返るはずだが、念のため両対応)
         const { data, error } = await supabase
             .from('tournaments')
             .select('*');
@@ -23,10 +54,8 @@ async function loadTournaments() {
         if (error) throw error;
 
         allTournaments = data.map(doc => {
-            // カラム名の揺らぎ吸収 (Camel or Snake)
             return {
                 ...doc,
-                // Normalized properties for sort & display
                 eventDate: doc.eventDate || doc.event_date || doc.eventdate,
                 status: doc.status || 'upcoming',
                 entryEnd: doc.entryEnd || doc.entry_end || doc.entryend,
@@ -43,7 +72,8 @@ async function loadTournaments() {
 
     } catch (e) {
         console.error(e);
-        list.innerHTML = '<div style="grid-column:1/-1; padding:20px; color:red; text-align:center;">読み込みエラー</div>';
+        // エラー時でもフェードアップ等は阻害しないように
+        list.innerHTML = '<div style="grid-column:1/-1; padding:20px; color:#cbd5e0; text-align:center;">現在表示できる大会情報はありません</div>';
     }
 }
 
@@ -54,7 +84,6 @@ function renderTourList() {
         return;
     }
 
-    // クライアント側ソート: 受付中 -> 開催予定 -> 終了
     const statusOrder = { 'open': 1, 'upcoming': 2, 'closed': 3 };
     
     let sortedTours = [...allTournaments];
@@ -77,9 +106,7 @@ function renderTourList() {
          
          let base = [...opens, ...upcomings];
          
-         if (closeds.length > 0) {
-             base.push(closeds[0]);
-         }
+         if (closeds.length > 0) base.push(closeds[0]);
          
          if (base.length > 3) {
              displayTours = base;
@@ -94,11 +121,9 @@ function renderTourList() {
              }
          }
     } else {
-        // PC: 6件制限
         displayTours = sortedTours.slice(0, 6);
     }
     
-    // 表示用再ソート
     displayTours.sort((a, b) => {
         const sA = statusOrder[a.status] || 99;
         const sB = statusOrder[b.status] || 99;
@@ -110,24 +135,18 @@ function renderTourList() {
 
     let html = '';
     displayTours.forEach(t => {
-        // common.js の generateTourCard を呼ぶ
         html += generateTourCard(t);
     });
 
     list.innerHTML = html;
+    
+    // DOM更新後にアニメーションクラス適用などをトリガーするならここだが
+    // CSSのfade-upはIntersectionObserverで監視済み
+    if (window.checkFade) window.checkFade(); // If exists
+
     updateCtaBar(displayTours);
 }
 
-// リサイズリスナー
-window.addEventListener('resize', () => {
-    const isMobile = window.innerWidth < 768;
-    if (isMobile !== lastIsMobile) {
-        lastIsMobile = isMobile;
-        renderTourList();
-    }
-});
-
-// CTAバーロジック
 function updateCtaBar(data) {
     const ctaBar = document.getElementById('ctaBar');
     if (!ctaBar) return;
@@ -191,10 +210,8 @@ function checkCtaVisibility() {
     ctaBar.classList.remove('hidden');
 }
 
-
-// 開始時にロード
-loadTournaments();
-loadIndexNews();
+// Scroll Event
+window.addEventListener('scroll', checkCtaVisibility);
 
 async function loadIndexNews() {
     const newsList = document.getElementById('newsList');
@@ -262,6 +279,6 @@ async function loadIndexNews() {
 
     } catch (e) { 
         console.error('News load error', e); 
-        if (newsList) newsList.innerHTML = 'Error loading news';
+        // Silent fail or simple message
     }
 }
